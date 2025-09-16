@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>오픈업 - 상권 분석 플랫폼</title>
+  <title>종로구 상권분석 - 상권 분석 플랫폼</title>
   <meta name="description" content="누구나 쉽고 가장 빠른 최신의 상권 정보, 오픈업에서 확인하세요" />
 
   <!-- Leaflet & Icons -->
@@ -23,12 +23,12 @@
   <!-- Header -->
   <header class="header">
     <div class="header-content">
-      <div class="logo"><h1>오픈업</h1></div>
+      <div class="logo"><h1>종로구 상권분석</h1></div>
       <nav class="nav">
-        <a href="#" class="nav-link">상권</a>
-        <a href="#" class="nav-link">빠른상권</a>
-        <a href="#" class="nav-link">창업계산</a>
-        <a href="#" class="nav-link">관심목록</a>
+        <a href="#" class="nav-link"></a>
+        <a href="#" class="nav-link"></a>
+        <a href="#" class="nav-link"></a>
+        <a href="#" class="nav-link"></a>
       </nav>
       <div class="header-actions"><button class="btn-login">로그인</button></div>
     </div>
@@ -49,30 +49,30 @@
 
         <!-- Industry Filter -->
         <div class="filter-section">
-          <h3>업종필터</h3>
+          <h3>업태선택</h3>
           <div class="filter-tabs">
-            <button class="filter-tab active" data-industry="all">전체 업종</button>
-            <button class="filter-tab" data-industry="food">음식</button>
-            <button class="filter-tab" data-industry="retail">소매</button>
-            <button class="filter-tab" data-industry="service">서비스</button>
-            <button class="filter-tab" data-industry="entertainment">오락</button>
-            <button class="filter-tab" data-industry="education">교육</button>
-            <button class="filter-tab" data-industry="accommodation">숙박</button>
+            <button class="filter-tab active" data-industry="all">한식</button>
+            <button class="filter-tab" data-industry="food">중식</button>
+            <button class="filter-tab" data-industry="food">일식</button>
+            <button class="filter-tab" data-industry="food">양식</button>
+            <button class="filter-tab" data-industry="food">기타외국식</button>
+            <button class="filter-tab" data-industry="food">구내식당업</button>
+            <button class="filter-tab" data-industry="food">출장·이동음식</button>
+            <button class="filter-tab" data-industry="food">제과점</button>
+            <button class="filter-tab" data-industry="food">피자·햄버거·샌드위치 및 유사음식</button>
+            <button class="filter-tab" data-industry="food">치킨전문점</button>
+            <button class="filter-tab" data-industry="food">김밥 및 기타 간이음식</button>
+            <button class="filter-tab" data-industry="food">간이음식포장</button>
+            <button class="filter-tab" data-industry="food">주점</button>
+            <button class="filter-tab" data-industry="food">비알콜 음료점</button>
+            <button class="filter-tab" data-industry="food">기타</button>
           </div>
         </div>
 
-        <!-- Area Tools -->
-        <div class="area-tools">
-          <h3>상권</h3>
-          <div class="tool-buttons">
-            <button class="tool-btn" id="circle-tool"><i class="fas fa-circle"></i> 원형</button>
-            <button class="tool-btn" id="rectangle-tool"><i class="fas fa-square"></i> 사각형</button>
-            <button class="tool-btn" id="polygon-tool"><i class="fas fa-draw-polygon"></i> 다각형</button>
-          </div>
-        </div>
+        
 
         <!-- Analysis Panel -->
-        <div class="analysis-panel" id="analysis-panel">
+        <div class="analysis-panel" id="analysis-panel" style="display:none">
           <h3>상권 분석</h3>
           <div class="analysis-content">
             <div class="analysis-item">
