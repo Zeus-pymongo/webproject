@@ -1,31 +1,3 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>{% block title %}My Web{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    {% block head %}{% endblock %}
-</head>
-<body>
-    <header>
-        <h1>웹사이트 헤더</h1>
-        <nav>
-            <a href="{{ url_for('index') }}">Home</a>
-            <a href="{{ url_for('page1') }}">Page1</a>
-            <a href="{{ url_for('page2') }}">Page2</a>
-        </nav>
-    </header>
-
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-
-    <footer>
-        <p>웹사이트556 Footer</p>
-    </footer>
-</body>
-</html>
-
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -66,7 +38,7 @@ body {
 .logo h1 {
     color: #007bff;
     font-size: 24px;
-    font-weight: 700;
+    font-weight: 1700;
 }
 
 .nav {
