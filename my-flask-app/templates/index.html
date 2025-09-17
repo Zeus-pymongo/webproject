@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<<<<<<< HEAD
     <meta charset="UTF-8">
     <title> 웹페이지</title>
     <style>
@@ -15,6 +16,136 @@
     <h1>5조 rdfg</h1>
     <p> 한강에 놀러가고싶어요 한강라면 뿌수러가요 😊</p>
     <button onclick="alert('버튼 클릭!')">클릭해보세요</button>
+=======
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>종로구 상권분석 - 상권 분석 플랫폼</title>
+  <meta name="description" content="누구나 쉽고 가장 빠른 최신의 상권 정보, 오픈업에서 확인하세요" />
+
+  <!-- Leaflet & Icons -->
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="anonymous" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+  <!-- Project CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo"><h1>종로구 상권분석</h1></div>
+      <nav class="nav">
+        <a href="#" class="nav-link"></a>
+        <a href="#" class="nav-link"></a>
+        <a href="#" class="nav-link"></a>
+        <a href="#" class="nav-link"></a>
+      </nav>
+      <div class="header-actions"><button class="btn-login">로그인</button></div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <div class="main-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-content">
+        <!-- Search -->
+        <div class="search-section">
+          <div class="search-box">
+            <input type="text" placeholder="도로명, 지번, 건물명을 검색하세요" class="search-input" />
+            <button class="search-btn"><i class="fas fa-search"></i></button>
+          </div>
+        </div>
+
+        <!-- Industry Filter -->
+        <div class="filter-section">
+          <h3>업태선택</h3>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-industry="all">한식</button>
+            <button class="filter-tab" data-industry="food">중식</button>
+            <button class="filter-tab" data-industry="food">일식</button>
+            <button class="filter-tab" data-industry="food">양식</button>
+            <button class="filter-tab" data-industry="food">기타외국식</button>
+            <button class="filter-tab" data-industry="food">구내식당업</button>
+            <button class="filter-tab" data-industry="food">출장·이동음식</button>
+            <button class="filter-tab" data-industry="food">제과점</button>
+            <button class="filter-tab" data-industry="food">피자·햄버거·샌드위치 및 유사음식</button>
+            <button class="filter-tab" data-industry="food">치킨전문점</button>
+            <button class="filter-tab" data-industry="food">김밥 및 기타 간이음식</button>
+            <button class="filter-tab" data-industry="food">간이음식포장</button>
+            <button class="filter-tab" data-industry="food">주점</button>
+            <button class="filter-tab" data-industry="food">비알콜 음료점</button>
+            <button class="filter-tab" data-industry="food">기타</button>
+          </div>
+        </div>
+
+        
+
+        <!-- Analysis Panel -->
+        <div class="analysis-panel" id="analysis-panel" style="display:none">
+          <h3>상권 분석</h3>
+          <div class="analysis-content">
+            <div class="analysis-item">
+              <h4>건물 중심 상권 생성</h4>
+              <p>선택한 건물을 중심으로 상권을 분석합니다.</p>
+            </div>
+            <div class="analysis-item">
+              <h4>주거인구</h4>
+              <p>반경 600m 내 주거인구 데이터를 확인하세요.</p>
+            </div>
+            <div class="analysis-item">
+              <h4>건물 추정 매출</h4>
+              <p>최근 1년 동안 매출 변화 추정 그래프</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Map Area -->
+    <main class="map-container">
+      <div id="map" class="map"></div>
+
+      <!-- Map Controls -->
+      <div class="map-controls">
+        <button class="control-btn" id="geolocate-btn">
+          <i class="fas fa-location-arrow"></i>
+        </button>
+        <button class="control-btn" id="reset-view-btn">
+          <i class="fas fa-home"></i>
+        </button>
+      </div>
+
+      <!-- Map Legend -->
+      <div class="map-legend" style="display:none">
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>누구나 쉽고 가장 빠른 최신의 상권 정보, 종로구 상권분석에서 확인하세요.</p>
+      <p>지도 데이터 © <a href="https://www.openstreetmap.org/copyright"
+                         target="_blank" rel="noopener">OpenStreetMap</a></p>
+    </div>
+  </footer>
+
+  <!-- Libs -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Project JS -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+>>>>>>> bd3828c4fa23821d6ca84f5711c03bf8dedb2d49
 </body>
 </html>
 
