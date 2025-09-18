@@ -110,19 +110,30 @@ html, body {
 }
 .filter-tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
 }
+
 .filter-tab {
-    padding: 10px;
+    padding: 5px;
     border: 1px solid #ddd;
     background: #fff;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 14px;
     cursor: pointer;
     text-align: center;
     transition: all 0.2s;
+    
+    /* 버튼 크기 고정 */
+    height: 80px;
+    
+    /* 텍스트 중앙 정렬 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
+
+
 .filter-tab.active, .filter-tab:hover {
     background: #007bff;
     color: white;
@@ -197,4 +208,27 @@ html, body {
     font-size: 24px;
     font-weight: bold;
     cursor: pointer;
+}
+/* 사이드바 하단 버튼 스타일 */
+.analysis-action {
+    margin-top: auto; /* 사이드바 하단에 고정 */
+    padding-top: 24px;
+    border-top: 1px solid #e9ecef;
+}
+
+.analysis-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background: #007bff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.analysis-btn:hover {
+    background: #0056b3;
 }

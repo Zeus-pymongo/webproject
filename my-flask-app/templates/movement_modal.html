@@ -1,0 +1,48 @@
+<div id="movementModal" class="popup" >
+  <div class="popup-content">
+    <span class="close" id="movement-modal-close">&times;</span>
+    <form id="movement-form-modal">
+      <h2>유동인구 분석</h2>
+      <div class="modal-step" id="movement-step1">
+        <h3>출발 동 선택</h3>
+        <select id="movement-dong-select" name="start_dong" class="dong-select">
+          <option value="">-- 동을 선택하세요 --</option>
+          <option value="사직동">사직동</option>
+          <option value="삼청동">삼청동</option>
+          <option value="부암동">부암동</option>
+          <option value="평창동">평창동</option>
+          <option value="무악동">무악동</option>
+          <option value="교남동">교남동</option>
+          <option value="가회동">가회동</option>
+          <option value="종로1·2·3·4가동">종로1·2·3·4가동</option>
+          <option value="종로5·6가동">종로5·6가동</option>
+          <option value="이화동">이화동</option>
+          <option value="창신동">창신동</option>
+          <option value="숭인동">숭인동</option>
+          <option value="청운효자동">청운효자동</option>
+          <option value="혜화동">혜화동</option>
+        </select>
+      </div>
+      <div class="modal-step" id="movement-step2">
+        <h3>성별/연령대 필터</h3>
+        <div class="filter-options">
+          <div class="gender-filter">
+            <input type="radio" id="m-gender-all" name="gender" value="all" checked><label for="m-gender-all">전체</label>
+            <input type="radio" id="m-gender-m" name="gender" value="M"><label for="m-gender-m">남성</label>
+            <input type="radio" id="m-gender-f" name="gender" value="F"><label for="m-gender-f">여성</label>
+          </div>
+          <div class="age-filter">
+            <input type="checkbox" id="m-age-20s" name="age_group" value="20-29"><label for="m-age-20s">20대</label>
+            <input type="checkbox" id="m-age-30s" name="age_group" value="30-39"><label for="m-age-30s">30대</label>
+            <input type="checkbox" id="m-age-40s" name="age_group" value="40-49"><label for="m-age-40s">40대</label>
+            <input type="checkbox" id="m-age-50s" name="age_group" value="50-59"><label for="m-age-50s">50대</label>
+            <input type="checkbox" id="m-age-60s" name="age_group" value="60-69"><label for="m-age-60s">60대 이상</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="analysis-btn">분석하기</button>
+      </div>
+    </form>
+  </div>
+</div>
