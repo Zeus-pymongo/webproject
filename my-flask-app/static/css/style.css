@@ -1,91 +1,59 @@
-/* Reset and Base Styles */
+/* 기본 스타일 및 폰트 설정 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f8f9fa;
+html, body {
+    height: 100%;
+    overflow: hidden; /* 전체 페이지 스크롤 방지 */
+    font-family: 'Noto Sans KR', sans-serif;
     color: #333;
-    line-height: 1.6;
 }
 
-/* Header */
+/* 헤더 */
 .header {
     background: #fff;
-    border-bottom: 1px solid #e9ecef;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
     height: 60px;
+    padding: 0 20px;
 }
 
 .header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
     height: 100%;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
 .logo h1 {
-    color: #007bff;
-    font-size: 24px;
-    font-weight: 1700;
+    font-size: 20px;
+    font-weight: 700;
 }
 
-.nav {
-    display: flex;
-    gap: 30px;
-}
-
-.nav-link {
-    color: #666;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.nav-link:hover {
-    color: #007bff;
-}
-
-.btn-login {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.btn-login:hover {
-    background: #0056b3;
-}
-
-/* Main Container */
+/* 메인 컨테이너 (사이드바 + 지도) */
 .main-container {
     display: flex;
-    margin-top: 60px;
-    height: calc(100vh - 60px);
+    margin-top: 60px; /* 고정된 헤더 높이만큼 아래에서 시작 */
+    height: calc(100vh - 60px); /* 화면 전체 높이에서 헤더 높이를 뺀 나머지 */
 }
 
-/* Sidebar */
+/* 왼쪽 사이드바 */
 .sidebar {
-    width: 320px;
+    width: 350px;
     background: #fff;
     border-right: 1px solid #e9ecef;
-    overflow-y: auto;
+    overflow-y: auto; /* 내용이 길어지면 스크롤 */
     padding: 20px;
+    flex-shrink: 0; /* 창이 줄어도 사이드바 너비 유지 */
 }
 
 .sidebar-content {
@@ -94,408 +62,99 @@ body {
     gap: 24px;
 }
 
-/* Search Section */
-.search-section {
-    margin-bottom: 20px;
-}
 
-.search-box {
-    display: flex;
+/* ✅ 동 선택 드롭다운 */
+.dong-select {
+    width: 100%;
+    padding: 12px;
     border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.search-input {
-    flex: 1;
-    padding: 12px 16px;
-    border: none;
-    outline: none;
+    border-radius: 6px;
     font-size: 14px;
-}
-
-.search-btn {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 12px 16px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
+    background-color: #fff;
+    color: #333;
+    transition: all 0.2s;
+
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
 }
 
-.search-btn:hover {
-    background: #0056b3;
+.dong-select:hover {
+    border-color: #007bff;
+    color: #007bff;
 }
 
-/* Filter Section */
+.dong-select:focus {
+    border-color: #007bff;
+    background-color: #007bff;
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
+    outline: none;
+}
+
+
+
+/* 업태 필터 */
 .filter-section h3 {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 12px;
-    color: #333;
 }
-
 .filter-tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
 }
-
 .filter-tab {
-    padding: 10px 12px;
+    padding: 10px;
     border: 1px solid #ddd;
     background: #fff;
     border-radius: 6px;
     font-size: 13px;
     cursor: pointer;
-    transition: all 0.2s;
     text-align: center;
-}
-
-.filter-tab:hover {
-    border-color: #007bff;
-    color: #007bff;
-}
-
-.filter-tab.active {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
-/* Area Tools */
-.area-tools h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: #333;
-}
-
-.tool-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-.tool-btn {
-    flex: 1;
-    padding: 10px 8px;
-    border: 1px solid #ddd;
-    background: #fff;
-    border-radius: 6px;
-    font-size: 12px;
-    cursor: pointer;
     transition: all 0.2s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
 }
-
-.tool-btn:hover {
-    border-color: #007bff;
-    color: #007bff;
-}
-
-.tool-btn.active {
+.filter-tab.active, .filter-tab:hover {
     background: #007bff;
     color: white;
     border-color: #007bff;
 }
 
-/* Analysis Panel */
-.analysis-panel {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 16px;
-}
-
-.analysis-panel h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: #333;
-}
-
-.analysis-content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.analysis-item {
-    padding: 12px;
-    background: white;
-    border-radius: 6px;
-    border: 1px solid #e9ecef;
-}
-
-.analysis-item h4 {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    color: #333;
-}
-
-.analysis-item p {
-    font-size: 12px;
-    color: #666;
-    margin: 0;
-}
-
-/* Map Container */
+/* 오른쪽 지도 컨테이너 */
 .map-container {
-    flex: 1;
+    flex-grow: 1; /* 남은 공간을 모두 차지 */
     position: relative;
-    background: #f8f9fa;
 }
-
-.map {
+#map {
     width: 100%;
     height: 100%;
 }
 
-/* Map Controls */
+/* 지도 위 컨트롤 버튼 */
 .map-controls {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 15px;
+    right: 15px;
     z-index: 1000;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
-
 .control-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     background: white;
-    border: 1px solid #ddd;
+    border: none;
     border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.2s;
-}
-
-.control-btn:hover {
-    background: #f8f9fa;
-    border-color: #007bff;
-    color: #007bff;
-}
-
-/* Map Legend */
-.map-legend {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    z-index: 1000;
-    min-width: 200px;
-}
-
-.map-legend h4 {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: #333;
-}
-
-.legend-filters {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.legend-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.legend-group label {
-    font-size: 12px;
-    font-weight: 500;
-    color: #666;
-}
-
-.legend-options {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-
-.legend-btn {
-    padding: 4px 8px;
-    border: 1px solid #ddd;
-    background: white;
-    border-radius: 4px;
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.legend-btn:hover {
-    border-color: #007bff;
-    color: #007bff;
-}
-
-.legend-btn.active {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
-/* Footer */
-.footer {
-    background: #f8f9fa;
-    border-top: 1px solid #e9ecef;
-    padding: 20px;
-    text-align: center;
-    color: #666;
-    font-size: 12px;
-}
-
-.footer-content p {
-    margin: 4px 0;
-}
-
-.footer a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.footer a:hover {
-    text-decoration: underline;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .main-container {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 300px;
-    }
-    
-    .map-container {
-        height: calc(100vh - 360px);
-    }
-    
-    .nav {
-        display: none;
-    }
-    
-    .filter-tabs {
-        grid-template-columns: 1fr;
-    }
-    
-    .tool-buttons {
-        flex-direction: column;
-    }
-}
-
-/* Leaflet Customization */
-.leaflet-control-zoom {
-    border: none !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-}
-
-.leaflet-control-zoom a {
-    background: white !important;
-    color: #333 !important;
-    border: 1px solid #ddd !important;
-    border-radius: 6px !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
-}
-
-.leaflet-control-zoom a:hover {
-    background: #f8f9fa !important;
-    border-color: #007bff !important;
-    color: #007bff !important;
-}
-
-.leaflet-popup-content-wrapper {
-    border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-}
-
-.leaflet-popup-content {
-    font-family: 'Noto Sans KR', sans-serif !important;
-    font-size: 14px !important;
-}
-
-/* Business Markers */
-.business-marker {
-    background: #007bff;
-    border: 2px solid white;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.business-marker.food {
-    background: #28a745;
-}
-
-.business-marker.retail {
-    background: #ffc107;
-}
-
-.business-marker.service {
-    background: #17a2b8;
-}
-
-.business-marker.entertainment {
-    background: #dc3545;
-}
-
-.business-marker.education {
-    background: #6f42c1;
-}
-
-.business-marker.accommodation {
-    background: #fd7e14;
-}
-/* 기본 스타일 초기화 */
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: sans-serif;
-}
-
-/* 전체 레이아웃 */
-.main-container {
-    display: flex;
-    height: 100vh; /* 화면 전체 높이 */
-}
-
-.sidebar {
-    width: 350px;
-    background-color: #f8f9fa;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    overflow-y: auto;
-}
-
-.map-container {
-    flex-grow: 1; /* 남은 공간을 모두 차지 */
-}
-
-/* 지도가 표시될 div의 크기를 반드시 지정해야 합니다 */
-#map {
-    width: 100%;
-    height: 100%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    font-size: 16px;
 }
