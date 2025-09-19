@@ -76,6 +76,7 @@ def parse_size_scale_to_m2(text):
     if len(numbers) == 2:
         return (numbers[0], numbers[1])
     return (0, 0)
+# app.py
 
 @app.route('/api/calculate_cost', methods=['POST'])
 def calculate_cost():
@@ -91,7 +92,7 @@ def calculate_cost():
 
         pyeong = float(pyeong)
         
-        # 1. 총 월 임차료 계산
+        # 1. 총 월 임차료 계산 (단위 보정 수정)
         cursor.execute("""
             SELECT AVG(REN_AMOUNT) as AVG_RENT 
             FROM (
@@ -101,9 +102,10 @@ def calculate_cost():
             ) as T
         """, (region_id, floor))
         rent_per_pyeong_mandanwi = float((cursor.fetchone() or {}).get('AVG_RENT', 0))
+        # [★★★★★ 수정 ★★★★★] 계산 즉시 '원' 단위로 변환합니다.
         total_rent_cost = (pyeong * rent_per_pyeong_mandanwi)
 
-        # 2. 시설/구매 비용 계산 (Python 로직으로 변경)
+        # 2. 시설/구매 비용 계산 (기존과 동일)
         size_m2 = pyeong * 3.305785
         cursor.execute("SELECT SIZE_SCALE, PURCHASE_QTY FROM SCALE_PURCHASE")
         all_scales = cursor.fetchall()
@@ -113,10 +115,10 @@ def calculate_cost():
             min_m2, max_m2 = parse_size_scale_to_m2(scale['SIZE_SCALE'])
             if min_m2 <= size_m2 < max_m2:
                 purchase_cost_mandanwi = float(scale['PURCHASE_QTY'])
-                break # 맞는 구간을 찾으면 루프 종료
+                break
         total_purchase_cost = purchase_cost_mandanwi * 10000
 
-        # 3. 업태별 초기 투자 비용
+        # 3. 업태별 초기 투자 비용 (기존과 동일)
         cursor.execute("""
             SELECT i.INV_AMOUNT FROM INVEST i JOIN TYPE t ON i.TYPE_ID = t.TYPE_ID
             WHERE t.TYPE_NAME = %s
@@ -124,12 +126,16 @@ def calculate_cost():
         invest_cost_mandanwi = float((cursor.fetchone() or {}).get('INV_AMOUNT', 0))
         total_invest_cost = invest_cost_mandanwi * 10000
 
-        # 4. 최종 비용 합산
+        # 4. 최종 비용 합산 (이제 모든 단위가 '원'으로 통일됨)
         total_cost = total_rent_cost + total_purchase_cost + total_invest_cost
 
         return jsonify({
             'costs': {
-                'rent': {'pyeong': pyeong, 'per_pyeong': rent_per_pyeong_mandanwi * 10000, 'total': total_rent_cost},
+                'rent': {
+                    'pyeong': pyeong, 
+                    'per_pyeong': rent_per_pyeong_mandanwi, # 평당 임대료도 '원' 단위로
+                    'total': total_rent_cost # 총 임대료도 '원' 단위로
+                },
                 'purchase': total_purchase_cost,
                 'invest': total_invest_cost,
                 'total': total_cost
