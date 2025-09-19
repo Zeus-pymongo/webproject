@@ -134,118 +134,117 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- 4. 상권 분석 모달 기능 ---
-    const analysisModal = document.getElementById('analysisModal');
-    const modalOpenBtn = document.getElementById('show-analysis-modal');
-    const modalCloseBtn = document.getElementById('analysis-modal-close');
-    
-    // 각 단계의 화면과 버튼 요소들을 가져옴
-    const modalSteps = document.querySelectorAll('.modal-step');
-    const floorBtns = document.querySelectorAll('.floor-btn');
-    const scaleBtns = document.querySelectorAll('.scale-btn');
-    const typeBtns = document.querySelectorAll('.type-btn'); // 3단계 버튼 추가
-    const restartBtn = document.getElementById('restart-analysis-btn'); // 다시하기 버튼 추가
-    
-    // 선택된 값들을 저장할 객체
-    let analysisSelections = {
-        floor: null,
-        scale: null,
-        type: null // type 속성 추가
-    };
+// app.js의 상권 분석 모달 기능 부분을 아래 코드로 교체
 
-    // '상권분석' 버튼 클릭 -> 모달 열기 및 초기화
-    if (modalOpenBtn) {
-        modalOpenBtn.addEventListener('click', () => {
-            analysisSelections = { floor: null, scale: null, type: null };
-            analysisModal.style.display = 'flex';
-            showStep(1); // 항상 1단계부터 시작
-        });
-    }
+// --- 4. 상권 분석 모달 기능 ---
+const analysisModal = document.getElementById('analysisModal');
+const modalOpenBtn = document.getElementById('show-analysis-modal');
+const modalCloseBtn = document.getElementById('analysis-modal-close');
 
-    // 닫기(X) 버튼 클릭 / 모달 바깥 영역 클릭 -> 모달 닫기
-    if (modalCloseBtn) {
-        modalCloseBtn.addEventListener('click', () => { analysisModal.style.display = 'none'; });
-    }
-    window.addEventListener('click', (event) => {
-        if (event.target == analysisModal) {
-            analysisModal.style.display = 'none';
-        }
+const modalSteps = document.querySelectorAll('.modal-step');
+const regionBtns = document.querySelectorAll('.region-btn');
+const floorBtns = document.querySelectorAll('.floor-btn');
+const pyeongSlider = document.getElementById('pyeong-slider');
+const sliderValue = document.getElementById('slider-value');
+const pyeongNextBtn = document.getElementById('pyeong-next-btn');
+const typeBtns = document.querySelectorAll('.type-btn');
+const restartBtn = document.getElementById('restart-analysis-btn');
+
+let analysisSelections = { region_id: null, floor: null, pyeong: 30, type: null };
+
+if (modalOpenBtn) {
+    modalOpenBtn.addEventListener('click', () => {
+        analysisSelections = { region_id: null, floor: null, pyeong: 30, type: null };
+        pyeongSlider.value = 30;
+        sliderValue.textContent = 30;
+        analysisModal.style.display = 'flex';
+        showStep(1);
     });
+}
+if (modalCloseBtn) {
+    modalCloseBtn.addEventListener('click', () => { analysisModal.style.display = 'none'; });
+}
+window.addEventListener('click', (e) => {
+    if (e.target == analysisModal) analysisModal.style.display = 'none';
+});
 
-    // 1단계: 층수 선택
-    floorBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            analysisSelections.floor = this.dataset.value;
-            console.log("현재 선택:", analysisSelections);
-            showStep(2); // 2단계로 이동
-        });
+// 1단계: 지역 선택
+regionBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+        analysisSelections.region_id = this.dataset.value;
+        showStep(2);
     });
-    
-    // 2단계: 규모 선택
-    scaleBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            analysisSelections.scale = this.dataset.value;
-            console.log("현재 선택:", analysisSelections);
-            showStep(3); // [수정] 3단계(업태 선택)로 이동
-        });
+});
+// 2단계: 층수 선택
+floorBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+        analysisSelections.floor = this.dataset.value;
+        showStep(3);
     });
+});
+// 3단계: 평수 선택 (슬라이더)
+pyeongSlider.addEventListener('input', function() {
+    sliderValue.textContent = this.value;
+    analysisSelections.pyeong = this.value;
+});
+pyeongNextBtn.addEventListener('click', () => {
+    showStep(4);
+});
+// 4단계: 업태 선택 및 최종 계산
+typeBtns.forEach(btn => {
+    btn.addEventListener('click', async function() {
+        analysisSelections.type = this.dataset.value;
+        showStep(5);
+        
+        const resultDiv = document.getElementById('analysis-result');
+        resultDiv.innerHTML = '<p>상권 분석 및 비용 계산 중입니다...</p>';
 
-    // [★★★★★ 추가된 부분 ★★★★★]
-    // 3단계: 업태 선택
-     typeBtns.forEach(btn => {
-        btn.addEventListener('click', async function() { // async 키워드 추가
-            analysisSelections.type = this.dataset.value;
-            console.log("최종 선택값:", analysisSelections);
-            
-            showStep(4); // 결과창 먼저 보여주기
-            
-            const resultDiv = document.getElementById('analysis-result');
-            resultDiv.innerHTML = '<p>예상 창업 비용을 계산 중입니다...</p>';
+        try {
+            const response = await fetch('/api/calculate_cost', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(analysisSelections)
+            });
+            const data = await response.json();
 
-            // 백엔드에 최종 비용 계산 요청
-            try {
-                const response = await fetch('/api/calculate_cost', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(analysisSelections)
-                });
-                const data = await response.json();
-
-                if (response.ok) {
-                    // 성공적으로 비용 데이터를 받으면 화면에 표시
-                    resultDiv.innerHTML = `
-                        <ul style="list-style:none; padding:0; margin:10px 0; text-align:left;">
-                            <li><strong>임대료:</strong> ${data.rent_cost.toLocaleString()} 원</li>
-                            <li><strong>구매 비용(물품, 장비 등):</strong> ${data.purchase_cost.toLocaleString()} 원</li>
-                            <li><strong>기타 비용(인테리어 등):</strong> ${data.etc_cost.toLocaleString()} 원</li>
+            if (response.ok) {
+                const formatKRW = (num) => Math.round(num).toLocaleString('ko-KR');
+                resultDiv.innerHTML = `
+                    <div style="text-align: left;">
+                        <h4>비용 분석 (월 기준)</h4>
+                        <ul style="list-style:none; padding:0; margin:10px 0; font-size: 14px;">
+                            <li><strong>- 임차료:</strong> ${formatKRW(data.costs.rent.total)} 원
+                                <small style="display:block; color:#666; padding-left:15px;">
+                                (평균 ${data.costs.rent.pyeong.toFixed(1)}평 × 평당 ${formatKRW(data.costs.rent.per_pyeong)}원)
+                                </small>
+                            </li>
+                            <li><strong>- 시설/구매 비용:</strong> ${formatKRW(data.costs.purchase)} 원</li>
+                            <li><strong>- 업태별 초기 투자금:</strong> ${formatKRW(data.costs.invest)} 원</li>
                         </ul>
-                        <hr>
-                        <h3 style="margin-top:20px;">총 예상 비용: ${data.total_cost.toLocaleString()} 원</h3>
-                    `;
-                } else {
-                    resultDiv.innerHTML = `<p style="color:red;">비용 계산 실패: ${data.error}</p>`;
-                }
-            } catch (error) {
-                console.error("비용 계산 API 호출 오류:", error);
-                resultDiv.innerHTML = `<p style="color:red;">서버와 통신 중 오류가 발생했습니다.</p>`;
+                    </div>
+                    <hr style="margin: 15px 0;">
+                    <h3 style="text-align:center; margin-top:15px;">
+                        초기 총 예상 비용:
+                        <span style="color: #007bff;">${formatKRW(data.costs.total)} 원</span>
+                    </h3>
+                `;
+            } else {
+                resultDiv.innerHTML = `<p style="color:red;">분석 실패: ${data.error}</p>`;
             }
-        });
-    });
-    // '처음부터 다시하기' 버튼 이벤트
-    if(restartBtn) {
-        restartBtn.addEventListener('click', () => {
-            showStep(1);
-        });
-    }
-
-    // 특정 단계의 모달을 보여주는 함수
-    function showStep(stepNumber) {
-        modalSteps.forEach(step => {
-            step.style.display = 'none';
-        });
-        const nextStep = document.getElementById(`step${stepNumber}`);
-        if(nextStep) {
-            nextStep.style.display = 'block';
+        } catch (error) {
+            resultDiv.innerHTML = `<p style="color:red;">서버와 통신 중 오류가 발생했습니다.</p>`;
         }
-    }
+    });
+});
+// 5단계: 다시하기
+if (restartBtn) {
+    restartBtn.addEventListener('click', () => {
+        showStep(1);
+    });
+}
+function showStep(stepNumber) {
+    modalSteps.forEach(step => { step.style.display = 'none'; });
+    const nextStep = document.getElementById(`step${stepNumber}`);
+    if(nextStep) { nextStep.style.display = 'block'; }
+}
 });

@@ -426,3 +426,52 @@ html, body {
     background: #5a6268;
 }
 /* [★★★★★ 추가/수정될 부분 끝 ★★★★★] */
+/* style.css 파일 맨 아래에 추가 */
+.slider-container {
+    padding: 20px 10px;
+    text-align: center;
+}
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+}
+.slider:hover {
+    opacity: 1;
+}
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+}
+.slider-container p {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 15px;
+    color: #007bff;
+}
+.next-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+.region-options {
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
