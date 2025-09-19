@@ -232,3 +232,197 @@ html, body {
 .analysis-btn:hover {
     background: #0056b3;
 }
+/* 기존 CSS 코드는 그대로 둡니다... */
+
+/* [★★★★★ 추가된 부분 시작 ★★★★★] */
+/* 모달 스타일 */
+
+/* 뒷배경을 어둡게 만드는 오버레이 */
+.modal-overlay {
+    position: fixed; /* 화면 전체에 고정 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* 반투명 검은색 배경 */
+    display: none; /* 평소에는 숨김 */
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    z-index: 2000; /* 다른 요소들보다 위에 표시 */
+}
+
+/* 모달이 활성화되었을 때 보이도록 하는 클래스 */
+.modal-overlay.active {
+    display: flex;
+}
+
+/* 모달 창 본체 */
+.modal-content {
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 700px; /* 최대 너비 지정 */
+    min-height: 1000px; /* 최소 높이 지정 */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 모달 헤더 (제목, 닫기 버튼) */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    color: #333;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+/* 모달 내용 부분 */
+.modal-body {
+    flex-grow: 1; /* 남은 공간을 모두 차지 */
+}
+/* [★★★★★ 추가된 부분 끝 ★★★★★] */
+/* ... 기존의 다른 CSS 코드는 그대로 둡니다 ... */
+
+
+/* [★★★★★ 추가된 부분 시작 ★★★★★] */
+/* 상권 분석 모달 스타일 */
+.popup {
+    display: none; /* 평소에는 숨김 */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 25px 30px;
+    border: 1px solid #888;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.close {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-step h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+}
+
+.option-btn {
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option-btn:hover {
+    background-color: #eaf0ff;
+    border-color: #007bff;
+    color: #007bff;
+}
+/* [★★★★★ 추가된 부분 끝 ★★★★★] */
+/* ... 기존 모달 CSS ... */
+
+/* [★★★★★ 추가/수정될 부분 시작 ★★★★★] */
+/* 모달 창 본체 높이 조절 */
+.popup-content {
+    min-height: 400px; /* 최소 높이 지정 */
+    max-height: 80vh; /* 화면 높이의 80%를 넘지 않도록 설정 */
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-step {
+    display: none; /* 기본적으로 모든 단계를 숨김 */
+}
+
+/* 업태 선택 옵션 스크롤 처리 */
+.type-options {
+    max-height: 250px; /* 높이 제한 */
+    overflow-y: auto; /* 내용이 넘치면 스크롤바 표시 */
+    padding-right: 10px; /* 스크롤바 공간 확보 */
+}
+
+/* 최종 결과 표시 박스 스타일 */
+.analysis-result-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* 다시하기 버튼 스타일 */
+.restart-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.restart-btn:hover {
+    background: #5a6268;
+}
+/* [★★★★★ 추가/수정될 부분 끝 ★★★★★] */

@@ -1,77 +1,41 @@
-document.addEventListener("DOMContentLoaded", function () {
-  "use strict";
+document.addEventListener('DOMContentLoaded', function () {
+    const analysisModal = document.getElementById('analysisModal');
+    const modalOpenBtn = document.getElementById('show-analysis-modal');
+    const modalCloseBtn = document.getElementById('analysis-modal-close');
+    const modalSteps = document.querySelectorAll('.modal-step');
+    const optionBtns = document.querySelectorAll('.option-btn');
+    
+    let selectedFloor = null;
 
-  const modal = document.getElementById("analysisModal");
-  const closeBtn = document.getElementById("modal-close");
-  const steps = document.querySelectorAll(".modal-step");
-
-  let selectedDong = "";
-  let selectedIndustry = "";
-  let selectedFloor = "";
-  let selectedSize = "";
-
-  // =====================
-  // 🔹 모달 열기/닫기
-  // =====================
-  function openModal() {
-    if (selectedDong && selectedIndustry) {
-      console.log("📌 모달 열기 조건 충족:", selectedDong, selectedIndustry); // 디버깅용
-      modal.style.display = "flex"; // ✅ flex 적용
-      showStep(0);
-    } else {
-      console.log("⚠️ 조건 불충족:", selectedDong, selectedIndustry);
-    }
-  }
-
-  function closeModal() {
-    modal.style.display = "none";
-    selectedFloor = "";
-    selectedSize = "";
-    document.getElementById("summary-list").innerHTML = "";
-  }
-
-  function showStep(index) {
-    steps.forEach((step, i) => {
-      step.style.display = i === index ? "block" : "none";
+    // 모달 열기
+    modalOpenBtn.addEventListener('click', () => {
+        analysisModal.style.display = 'flex';
+        showStep(1);
     });
-  }
 
-  // =====================
-  // 🔹 동 + 업태 선택 로직
-  // =====================
-  const dongSelect = document.getElementById("dong-select");
-  const industryTabs = document.querySelectorAll(".filter-tab");
-
-  // 동 선택
-  dongSelect.addEventListener("change", function () {
-    selectedDong = this.value;
-    console.log("✅ 선택된 동:", selectedDong);
-    checkSelections();
-  });
-
-  // 업태 선택
-  industryTabs.forEach(tab => {
-    tab.addEventListener("click", function () {
-      industryTabs.forEach(t => t.classList.remove("active"));
-      this.classList.add("active");
-      selectedIndustry = this.textContent;
-      console.log("✅ 선택된 업태:", selectedIndustry);
-      checkSelections();
+    // 모달 닫기
+    modalCloseBtn.addEventListener('click', () => {
+        analysisModal.style.display = 'none';
     });
-  });
 
-  // 공통 체크 함수
-  function checkSelections() {
-    if (selectedDong && selectedIndustry) {
-      openModal();
+    // 층수 선택 버튼 클릭 이벤트
+    optionBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            selectedFloor = this.dataset.value;
+            alert(`선택된 층수: ${selectedFloor}층`);
+            showStep(2); // 다음 단계로 이동
+        });
+    });
+
+    // 특정 모달 단계 보여주기
+    function showStep(stepNumber) {
+        modalSteps.forEach(step => {
+            step.style.display = 'none';
+        });
+        document.getElementById(`step${stepNumber}`).style.display = 'block';
     }
-  }
 
-  // =====================
-  // 🔹 닫기 버튼 이벤트
-  // =====================
-  closeBtn.addEventListener("click", closeModal);
-  document.querySelectorAll(".close-btn").forEach(btn =>
-    btn.addEventListener("click", closeModal)
-  );
+    // 이 외에 최종 폼 제출 시 선택된 값들을 처리하는 로직을 추가해야 합니다.
+    // 예: const analysisForm = document.getElementById('analysis-form-modal');
+    // analysisForm.addEventListener('submit', function() { ... });
 });

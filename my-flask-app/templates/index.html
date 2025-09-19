@@ -1,81 +1,108 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>종로구 상권분석 - 상권 분석 플랫폼</title>
-  <meta name="description" content="누구나 쉽고 가장 빠른 최신의 상권 정보, 오픈업에서 확인하세요" />
-  
-  <link rel="icon" href="data:,">
-
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-
-  <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId={{ naver_client_id }}"></script>
-  
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>종로구 상권분석 - 상권 분석 플랫폼</title>
+    
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId={{ naver_client_id }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <header class="header">
-    <div class="header-content">
-      <div class="logo"><h1>종로구 상권분석</h1></div>
-      <div class="header-actions">
-        <button id="show-movement-modal" class="btn-login">유동인구</button>
-        <button id="show-analysis-modal" class="btn-login">상권분석</button>
-      </div>
-    </div>
-  </header>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo"><h1>종로구 상권분석</h1></div>
+            <div class="header-actions">
+                <button id="show-movement-modal" class="btn-login">유동인구</button>
+                <button id="show-analysis-modal" class="btn-login">상권분석</button>
+            </div>
+        </div>
+    </header>
 
-  <div class="main-container">
-    <aside class="sidebar">
-      <div class="sidebar-content">
-         <div class="search-section">
-      
-  <div class="dong-section">
-    <h3>동 선택</h3>
-    <select id="dong-select" class="dong-select">
-      <option value="">-- 동을 선택하세요 --</option>
-      <option value="사직동">사직동</option>
-      <option value="삼청동">삼청동</option>
-      <option value="부암동">부암동</option>
-      <option value="평창동">평창동</option>
-      <option value="무악동">무악동</option>
-      <option value="교남동">교남동</option>
-      <option value="가회동">가회동</option>
-      <option value="종로1·2·3·4가동">종로1·2·3·4가동</option>
-      <option value="종로5·6가동">종로5·6가동</option>
-      <option value="이화동">이화동</option>
-      <option value="창신동">창신동</option>
-      <option value="숭인동">숭인동</option>
-      <option value="청운효자동">청운효자동</option>
-      <option value="혜화동">혜화동</option>
-    </select>
-  </div>
-<div class="filter-section">
-    <h3>업태선택</h3>
-<div class="filter-tabs">
-    {% for type_name in types %}
-    <button class="filter-tab" data-industry="{{ type_name }}">{{ type_name }}</button>
-    {% endfor %}
-</div>
-</div>
-      </div>
-    </aside>
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <form id="restaurant-filter-form">
+                    <div class="dong-section">
+                        <h3>1. 동 선택</h3>
+                        <select id="dong-select" name="region_id" class="dong-select">
+                            <option value="">-- 동을 선택하세요 --</option>
+                            {% for region in regions %}
+                            <option value="{{ region['REGION_ID'] }}">{{ region['REGION_NAME'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-    <main class="map-container">
-      <div id="map" class="map"></div>
-      <div class="map-controls">
-        <button class="control-btn" id="geolocate-btn">
-          <i class="fas fa-location-arrow"></i>
-        </button>
-        <button class="control-btn" id="reset-view-btn">
-          <i class="fas fa-home"></i>
-        </button>
-      </div>
-    </main>
-  </div>
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+                    <div class="filter-section">
+                        <h3>2. 업태선택</h3>
+                        <div class="filter-tabs">
+                            {% for type_name in types %}
+                            <button type="button" class="filter-tab" data-type-name="{{ type_name }}">{{ type_name }}</button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="analysis-btn" style="width:100%; margin-top:20px; padding:12px; font-size:16px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer;">
+                        음식점 핀으로 표시
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="map-container">
+            <div id="map" class="map"></div>
+            <div class="map-controls">
+                <button class="control-btn" id="geolocate-btn">
+                    <i class="fas fa-location-arrow"></i>
+                </button>
+                <button class="control-btn" id="reset-view-btn">
+                    <i class="fas fa-home"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+    
+    <div id="analysisModal" class="popup">
+        <div class="popup-content">
+            <span class="close" id="analysis-modal-close">&times;</span>
+            <form id="analysis-form-modal">
+                <div class="modal-step" id="step1">
+                    <h2>1단계: 가게 층수 선택</h2>
+                    <div class="options">
+                        {% for floor in floors %}
+                        <button type="button" class="option-btn floor-btn" data-value="{{ floor }}">{{ floor }}층</button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="modal-step" id="step2" style="display:none;">
+                    <h2>2단계: 상가 규모 선택</h2>
+                    <div class="options">
+                        {% for scale in scales %}
+                        <button type="button" class="option-btn scale-btn" data-value="{{ scale.SCALE_ID }}">{{ scale.SIZE_SCALE }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="modal-step" id="step3" style="display:none;">
+                    <h2>3단계: 창업 업태 선택</h2>
+                    <div class="options type-options"> {% for type_name in types %}
+                        <button type="button" class="option-btn type-btn" data-value="{{ type_name }}">{{ type_name }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="modal-step" id="step4" style="display:none;">
+                    <h2>최종 예상 창업 비용</h2>
+                    <div id="analysis-result" class="analysis-result-box">
+                        </div>
+                    <button type="button" id="restart-analysis-btn" class="restart-btn">처음부터 다시하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

@@ -1,0 +1,15 @@
+<div id="analysisModal" class="popup" >
+  <div class="popup-content">
+    <span class="close" id="analysis-modal-close">&times;</span>
+    <form id="analysis-form-modal">
+<div class="modal-step" id="step1">
+  <h2>가게 층수 선택</h2>
+  <div class="options">
+{% for floor in floors %}
+<button type="button" class="option-btn" data-value="{{ floor }}">{{ floor }}층</button>
+{% endfor %}
+  </div>
+</div>
+      </form>
+  </div>
+</div>
