@@ -15,7 +15,6 @@
         <div class="header-content">
             <div class="logo"><h1>종로구 상권분석</h1></div>
             <div class="header-actions">
-                <button id="show-movement-modal" class="btn-login">유동인구</button>
                 <button id="show-analysis-modal" class="btn-login">상권분석</button>
             </div>
         </div>
@@ -63,55 +62,61 @@
             </div>
         </main>
     </div>
-    
- <div id="analysisModal" class="popup">
-    <div class="popup-content">
-        <span class="close" id="analysis-modal-close">&times;</span>
-        <form id="analysis-form-modal">
-            <div class="modal-step" id="step1">
-                <h2>1단계: 지역 선택</h2>
-                <div class="options region-options">
-                    {% for region in regions %}
-                    <button type="button" class="option-btn region-btn" data-value="{{ region.REGION_ID }}">{{ region.REGION_NAME }}</button>
-                    {% endfor %}
-                </div>
-            </div>
 
-            <div class="modal-step" id="step2" style="display:none;">
-                <h2>2단계: 가게 층수 선택</h2>
-                <div class="options">
-                    {% for floor in floors %}
-                    <button type="button" class="option-btn floor-btn" data-value="{{ floor }}">{{ floor }}층</button>
-                    {% endfor %}
+    <div id="analysisModal" class="popup">
+        <div class="popup-content large">
+            <span class="close">&times;</span>
+            <form id="analysis-form-modal">
+                <div class="modal-step" id="step1">
+                    <h2>1단계: 분석할 지역 선택</h2>
+                    <div class="options region-options">
+                        {% for region in regions %}
+                        <button type="button" class="option-btn region-btn" data-value="{{ region.REGION_ID }}" data-name="{{ region.REGION_NAME }}">{{ region.REGION_NAME }}</button>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
-
-            <div class="modal-step" id="step3" style="display:none;">
-                <h2>3단계: 희망 평수 선택</h2>
-                <div class="slider-container">
-                    <input type="range" min="5" max="100" value="30" class="slider" id="pyeong-slider">
-                    <p><span id="slider-value">30</span>평</p>
+                <div class="modal-step" id="step2" style="display:none;">
+                    <h2>2단계: 가게 층수 선택</h2>
+                    <div class="options">
+                        {% for floor in floors %}
+                        <button type="button" class="option-btn floor-btn" data-value="{{ floor }}">{{ floor }}층</button>
+                        {% endfor %}
+                    </div>
                 </div>
-                <button type="button" class="next-btn" id="pyeong-next-btn">다음</button>
-            </div>
-
-            <div class="modal-step" id="step4" style="display:none;">
-                <h2>4단계: 창업 업태 선택</h2>
-                <div class="options type-options">
-                    {% for type_name in types %}
-                    <button type="button" class="option-btn type-btn" data-value="{{ type_name }}">{{ type_name }}</button>
-                    {% endfor %}
+                <div class="modal-step" id="step3" style="display:none;">
+                    <h2>3단계: 희망 평수 선택</h2>
+                    <div class="slider-container">
+                        <input type="range" min="5" max="100" value="30" class="slider" id="pyeong-slider">
+                        <p><span id="slider-value">30</span>평</p>
+                    </div>
+                    <button type="button" class="next-btn" id="pyeong-next-btn">다음</button>
                 </div>
-            </div>
-            
-            <div class="modal-step" id="step5" style="display:none;">
-                <h2>최종 예상 창업 비용</h2>
-                <div id="analysis-result" class="analysis-result-box"></div>
-                <button type="button" id="restart-analysis-btn" class="restart-btn">처음부터 다시하기</button>
-            </div>
-        </form>
+                <div class="modal-step" id="step4" style="display:none;">
+                    <h2>4단계: 창업 업태 선택</h2>
+                    <div class="options type-options">
+                        {% for type_name in types %}
+                        <button type="button" class="option-btn type-btn" data-value="{{ type_name }}">{{ type_name }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-step" id="step5" style="display:none;">
+                    <h2>📊 최종 상권 분석 결과</h2>
+                    <div class="cost-summary-box">
+                        <h3>💰 예상 창업 비용</h3>
+                        <div id="cost-result-box"></div>
+                    </div>
+                    <div class="chart-display-area">
+                        <h3>👥 유동인구 분석</h3>
+                        <div class="chart-item">
+                            <img id="genderChartImage" alt="성별 비율 그래프" style="display: none; width: 100%; height: auto;">
+                        </div>
+                    </div>
+                    <button type="button" id="restart-analysis-btn" class="restart-btn">처음부터 다시하기</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+    
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
