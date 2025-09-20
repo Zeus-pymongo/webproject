@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>종로구 상권분석 - 상권 분석 플랫폼</title>
-    
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId={{ naver_client_id }}"></script>
@@ -33,7 +32,6 @@
                             {% endfor %}
                         </select>
                     </div>
-
                     <div class="filter-section">
                         <h3>2. 업태선택</h3>
                         <div class="filter-tabs">
@@ -42,10 +40,7 @@
                             {% endfor %}
                         </div>
                     </div>
-                    
-                    <button type="submit" class="analysis-btn" style="width:100%; margin-top:20px; padding:12px; font-size:16px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer;">
-                        음식점 핀으로 표시
-                    </button>
+                    <button type="submit" class="analysis-btn">음식점 핀으로 표시</button>
                 </form>
             </div>
         </aside>
@@ -53,12 +48,8 @@
         <main class="map-container">
             <div id="map" class="map"></div>
             <div class="map-controls">
-                <button class="control-btn" id="geolocate-btn">
-                    <i class="fas fa-location-arrow"></i>
-                </button>
-                <button class="control-btn" id="reset-view-btn">
-                    <i class="fas fa-home"></i>
-                </button>
+                <button class="control-btn" id="geolocate-btn"><i class="fas fa-location-arrow"></i></button>
+                <button class="control-btn" id="reset-view-btn"><i class="fas fa-home"></i></button>
             </div>
         </main>
     </div>
@@ -105,10 +96,19 @@
                         <h3>💰 예상 창업 비용</h3>
                         <div id="cost-result-box"></div>
                     </div>
+                    <h3>👥 유동인구 분석</h3>
                     <div class="chart-display-area">
-                        <h3>👥 유동인구 분석</h3>
                         <div class="chart-item">
-                            <img id="genderChartImage" alt="성별 비율 그래프" style="display: none; width: 100%; height: auto;">
+                            <h4>연령대 및 성별 유동인구</h4>
+                            <img id="ageGenderChartImage" alt="연령대 및 성별 유동인구 그래프">
+                        </div>
+                        <div class="chart-item">
+                            <h4>방문 목적별 유동인구</h4>
+                            <img id="movTypChartImage" alt="방문 목적별 유동인구 그래프">
+                        </div>
+                        <div class="chart-item">
+                            <h4>시간대별 방문 목적 유동인구</h4>
+                            <img id="timeMovTypChartImage" alt="시간대별 방문 목적 유동인구 그래프">
                         </div>
                     </div>
                     <button type="button" id="restart-analysis-btn" class="restart-btn">처음부터 다시하기</button>

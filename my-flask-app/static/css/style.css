@@ -309,13 +309,38 @@ html, body {
     padding: 20px;
 }
 .chart-display-area h3 {
-    margin-top: 0;
+    margin-top: 500;
     text-align: center;
 }
 
 /* 개별 차트 아이템 (그래프 크기 조절) */
 .chart-item {
-    max-width: 300px; /* 그래프의 최대 너비 */
-    max-height: 300px; /* 그래프의 최대 높이 */
-    margin: 0 auto; /* 가운데 정렬 */
+    max-width: 1000px; /* 그래프의 최대 너비 */
+    max-height:1000px; /* 그래프의 최대 높이 */
+
+    padding: 15px; /* ★★★ 이 줄 추가 ★★★ */
+    margin: 0 auto 25px auto; 
+    box-sizing: border-box;
+
+}
+.chart-item img {
+    width: 100%; /* 부모 요소(.chart-item)의 너비에 꽉 채움 */
+    height: auto; /* 이미지의 가로세로 비율을 유지 */
+    display: block; /* 이미지 아래 불필요한 여백 제거 */
+}
+/* 그래프들이 모달 내에서 스크롤될 수 있도록 설정 */
+.chart-display-area {
+    max-height: 60vh; /* 모달 높이에 따라 적절히 조절 */
+    overflow-y: auto; /* 내용이 넘칠 경우 스크롤바 생성 */
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+/* 각 차트 제목 스타일 */
+.chart-display-area h4 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #333;
 }
