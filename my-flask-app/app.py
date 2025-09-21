@@ -1,5 +1,3 @@
-# app.py
-
 from flask import Flask, render_template, g, jsonify, request
 import os
 from dotenv import load_dotenv
@@ -11,12 +9,20 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+from pymongo import MongoClient
+from konlpy.tag import Okt
+from collections import Counter
+from wordcloud import WordCloud
 
 load_dotenv()
 app = Flask(__name__)
 
 # --- 설정 정보 ---
 MARIADB_CONFIG = { 'host': '192.168.0.221', 'port': 3306, 'user': 'jongro', 'password': 'pass123#', 'db': 'jongro', 'charset': 'utf8' }
+MONGO_CONFIG = { 'host': '192.168.0.222', 'port': 27017, 'username': 'kevin', 'password': 'pass123#', 'db_name': 'jongro' }
+CRAWLED_COLLECTION = 'crawled_nave_blogs'
+RESTAURANTS_COLLECTION = 'RESTAURANTS_GENERAL' # 식당 정보 컬렉션 이름 추가
+FONT_PATH = 'NanumGothic.ttf' # 프로젝트 폴더 내 폰트 경로
 
 # --- DB 연결 ---
 def get_mariadb_conn():
@@ -24,12 +30,20 @@ def get_mariadb_conn():
         g.mariadb_conn = pymysql.connect(**MARIADB_CONFIG)
     return g.mariadb_conn
 
+def get_mongodb_conn():
+    if 'mongodb_conn' not in g:
+        g.mongodb_conn = MongoClient(f"mongodb://{MONGO_CONFIG['username']}:{MONGO_CONFIG['password']}@{MONGO_CONFIG['host']}:{MONGO_CONFIG['port']}/")
+    return g.mongodb_conn
+
 @app.teardown_appcontext
 def close_db_connections(exception):
     mariadb_conn = g.pop('mariadb_conn', None)
     if mariadb_conn is not None and mariadb_conn.open:
         mariadb_conn.close()
-        
+    mongodb_conn = g.pop('mongodb_conn', None)
+    if mongodb_conn is not None:
+        mongodb_conn.close()
+
 def parse_size_scale_to_m2(text):
     if not text: return (0, 0)
     numbers = [float(s) for s in re.findall(r'\d+\.?\d*', text)]
@@ -41,21 +55,23 @@ def parse_size_scale_to_m2(text):
 # --- 라우트(Routes) 정의 ---
 @app.route('/')
 def index():
-    naver_client_id = os.getenv('NAVER_CLIENT_ID')
+    # 지도 관련 기능이 삭제되었으므로 naver_client_id는 더 이상 필요 없습니다.
     conn = get_mariadb_conn()
     types, regions, floors = [], [], []
     try:
         cursor = conn.cursor(pymysql.cursors.DictCursor)
+        # 상권 분석 모달에서 계속 사용되는 정보는 그대로 둡니다.
         cursor.execute("SELECT TYPE_NAME FROM TYPE ORDER BY TYPE_ID")
         types = [row['TYPE_NAME'] for row in cursor.fetchall()]
         cursor.execute("SELECT REGION_ID, REGION_NAME FROM REGION ORDER BY REGION_ID")
         regions = cursor.fetchall()
         cursor.execute("SELECT DISTINCT FLOOR FROM RENT ORDER BY FLOOR ASC")
         floors = [row['FLOOR'] for row in cursor.fetchall()]
+        print("✅ MariaDB에서 모달 필터 목록을 성공적으로 불러왔습니다.")
     except Exception as e:
-        print(f"❌ DB 목록 조회 오류: {e}")
+        print(f"❌ MariaDB 목록 조회 오류: {e}")
     
-    return render_template('index.html', naver_client_id=naver_client_id, types=types, regions=regions, floors=floors)
+    return render_template('index.html', types=types, regions=regions, floors=floors)
 
 @app.route('/api/final_analysis', methods=['POST'])
 def final_analysis():
@@ -124,7 +140,6 @@ def final_analysis():
             plt.close(fig)
 
         # --- 2. 방문 목적별 유동인구 차트 생성 ---
-        # ※ 주의: 실제 DB의 컬럼명이 MOV_TYPE이 아니라면 이 부분을 수정해야 합니다.
         cursor.execute("SELECT MOV_TYPE, SUM(MOV_COUNT) as total_moves FROM MOVEMENT WHERE DES_ID = %s GROUP BY MOV_TYPE ORDER BY MOV_TYPE", (region_id,))
         mov_typ_data = cursor.fetchall()
         mov_typ_chart_image = None
@@ -168,19 +183,13 @@ def final_analysis():
             ax.legend(title='이동 목적', bbox_to_anchor=(1.05, 1), loc='upper left'); fig.tight_layout()
             
             buf = io.BytesIO(); plt.savefig(buf, format='png', dpi=120)
-            buf.seek(0); time_mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8'); plt.close(fig)
-
-            # --- 4. 최종 데이터 반환 ---
+            buf.seek(0); 
+            time_mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8'); plt.close(fig)
+        
         return jsonify({
             'costs': {
-                'rent': {
-                    'total': total_rent_cost,
-                    'pyeong': pyeong, # ★★★ 평수 정보 추가 ★★★
-                    'per_pyeong': rent_per_pyeong_mandanwi # ★★★ 평당 임차료 정보 추가 ★★★
-                },
-                'purchase': total_purchase_cost,
-                'invest': total_invest_cost,
-                'total': total_cost
+                'rent': { 'total': total_rent_cost, 'pyeong': pyeong, 'per_pyeong': rent_per_pyeong_mandanwi },
+                'purchase': total_purchase_cost, 'invest': total_invest_cost, 'total': total_cost
             },
             'movement': {
                 'age_gender_chart_image': age_gender_chart_image,
@@ -194,5 +203,91 @@ def final_analysis():
         traceback.print_exc()
         return jsonify({'error': '최종 분석 중 서버 오류가 발생했습니다.'}), 500
 
+@app.route('/api/mongo_filters')
+def get_mongo_filters():
+    """트렌드 분석(워드클라우드)을 위한 필터 목록을 MongoDB에서 가져옵니다."""
+    try:
+        mongodb_conn = get_mongodb_conn()
+        db = mongodb_conn[MONGO_CONFIG['db_name']]
+        
+        dongs = sorted(db[CRAWLED_COLLECTION].distinct('admin_dong'))
+        categories = sorted(db[RESTAURANTS_COLLECTION].distinct('category'))
+
+        return jsonify({'success': True, 'dongs': dongs, 'categories': categories})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': 'MongoDB 필터 목록을 가져오는 중 오류가 발생했습니다.'}), 500
+
+# app.py
+
+@app.route('/api/wordcloud', methods=['POST'])
+def get_wordcloud():
+    """★★★ 수정된 워드클라우드 API ★★★"""
+    data = request.get_json()
+    dong_name = data.get('dong_name')
+    categories = data.get('categories')
+
+    if not dong_name or not categories:
+        return jsonify({'error': '동과 업태를 모두 선택해야 합니다.'}), 400
+
+    try:
+        mongodb_conn = get_mongodb_conn()
+        db = mongodb_conn[MONGO_CONFIG['db_name']]
+        
+        # 1. 선택된 동, 업태에 해당하는 식당 이름들을 먼저 찾습니다.
+        restaurant_collection = db[RESTAURANTS_COLLECTION]
+        target_restaurants = restaurant_collection.find(
+            {'admin_dong': dong_name, 'category': {'$in': categories}},
+            {'restaurant_name': 1, '_id': 0}
+        )
+
+        # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ [오류 수정] 이 부분을 수정했습니다 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+        # r.get('restaurant_name')을 사용하여 키가 없어도 오류가 나지 않게 하고, 
+        # 값이 있는 경우에만 리스트에 추가합니다.
+        target_restaurant_names = [
+            r.get('restaurant_name') for r in target_restaurants if r.get('restaurant_name')
+        ]
+        # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ [오류 수정] 여기까지 ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        if not target_restaurant_names:
+            return jsonify({'success': False, 'message': '해당 조건에 맞는 식당 정보가 없습니다.'})
+
+        # 2. 찾은 식당 이름과 일치하는 블로그 포스트의 본문을 가져옵니다.
+        blog_collection = db[CRAWLED_COLLECTION]
+        posts = blog_collection.find(
+            {'restaurant_name': {'$in': target_restaurant_names}},
+            {'blog_content': 1}
+        )
+        all_content = " ".join([post.get('blog_content', '') for post in posts])
+        
+        if not all_content.strip():
+            return jsonify({'success': False, 'message': '수집된 블로그 리뷰가 없습니다.'})
+
+        # 3. KoNLPy로 명사 추출 및 워드클라우드 생성
+        okt = Okt()
+        nouns = okt.nouns(all_content)
+        stopwords = {'곳', '것', '등', '수', '이', '그', '저', '때', '해', '맛집', '카페', '방문'}
+        words = [word for word in nouns if word not in stopwords and len(word) > 1]
+        word_counts = Counter(words)
+
+        if not word_counts:
+            return jsonify({'success': False, 'message': '분석할 키워드가 부족합니다.'})
+
+        wc = WordCloud(font_path=FONT_PATH, background_color='white', width=800, height=600).generate_from_frequencies(word_counts)
+        
+        # 4. 이미지를 Base64로 인코딩하여 반환
+        buf = io.BytesIO()
+        wc.to_file(buf, format='png')
+        buf.seek(0)
+        image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+        
+        return jsonify({'success': True, 'image': image_base64})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': '워드클라우드 생성 중 서버 오류가 발생했습니다.'}), 500
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
