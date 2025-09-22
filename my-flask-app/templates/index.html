@@ -33,23 +33,32 @@
                         <select id="category-select-mongo" name="categories" class="category-select" multiple size="10">
                             </select>
                     </div>
+                                            <button type="button" id="show-all-restaurants-btn" class="analysis-btn secondary" style="display:none; margin-top: 10px;">
+                            해당 동 전체 맛집 보기
+                        </button>
                     <button type="submit" class="analysis-btn">워드클라우드 분석</button>
                 </form>
             </div>
         </aside>
 
-        <main class="content-container">
-            <div id="wordcloud-result-area" class="result-area">
-                <div id="initial-message" style="text-align: center; padding: 40px; color: #666;">
-                    <h2>분석 결과를 기다리고 있습니다.</h2>
-                    <p>왼쪽 필터에서 동과 업태를 선택하고 '워드클라우드 분석' 버튼을 눌러주세요.</p>
-                </div>
-                <div id="result-content" style="display:none;">
-                    <h2 id="wordcloud-title"></h2>
-                    <div id="wordcloud-image-container"></div>
-                </div>
-            </div>
-        </main>
+<main class="content-container">
+    <div id="wordcloud-result-area" class="result-area">
+        <div id="initial-message" style="text-align: center; padding: 40px; color: #666;">
+            <h2>분석 결과를 기다리고 있습니다.</h2>
+            <p>왼쪽 필터에서 동과 업태를 선택하고 '워드클라우드 분석' 버튼을 눌러주세요.</p>
+        </div>
+        <div id="result-content" style="display:none;">
+            <div id="top-restaurant-info"></div>
+            <h2 id="wordcloud-title"></h2>
+            <div id="wordcloud-image-container"></div>
+        </div>
+    </div>
+
+    <div id="all-restaurants-area" class="result-area" style="display:none;">
+        <h2 id="all-restaurants-title"></h2>
+        <div id="all-restaurants-list"></div>
+    </div>
+</main>
     </div>
 
     <div id="analysisModal" class="popup">
@@ -115,6 +124,15 @@
         </div>
     </div>
     
+
+<div id="restaurantDetailModal" class="popup">
+    <div class="popup-content large">
+        <span class="close">&times;</span>
+        <div id="modal-content-area">
+            </div>
+    </div>
+</div>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-</body>
+
+  </body>
 </html>

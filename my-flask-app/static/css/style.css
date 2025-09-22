@@ -13,7 +13,7 @@ html, body {
     background-color: #f8f9fa;
 }
 
-/* 헤더 */
+/* --- 헤더 --- */
 .header {
     background: #fff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -40,123 +40,175 @@ html, body {
     font-weight: 700;
 }
 
-.btn-login {
-    background: #007bff;
+.header .btn-login {
+    background: linear-gradient(45deg, #007bff, #0056b3); /* 그라디언트 배경 */
     color: white;
     border: none;
     padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 500;
+    border-radius: 8px; /* 다른 버튼과 통일 */
+    font-weight: 600; /* 살짝 굵게 */
     cursor: pointer;
-    transition: background 0.2s;
-}
-.btn-login:hover {
-    background: #0056b3;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2); /* 은은한 그림자 */
+    transition: all 0.2s ease-in-out; /* 부드러운 전환 효과 */
 }
 
-/* 메인 컨테이너 (사이드바 + 지도) */
+.header .btn-login:hover {
+    transform: translateY(-2px); /* 살짝 떠오르는 효과 */
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3); /* 그림자 강조 */
+}
+
+/* --- 메인 컨테이너 (사이드바 + 콘텐츠) --- */
 .main-container {
     display: flex;
     margin-top: 60px;
     height: calc(100vh - 60px);
 }
 
-/* 왼쪽 사이드바 */
+/* --- 🎨 사이드바 (디자인 개선 버전) --- */
 .sidebar {
-    width: 350px;
-    background: #fff;
-    border-right: 1px solid #e9ecef;
+    width: 380px;
+    background: #ffffff;
+    border-right: 1px solid #dee2e6;
     overflow-y: auto;
-    padding: 20px;
+    padding: 25px 30px;
     flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: #ced4da;
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background-color: #f1f3f5;
 }
 
 .sidebar-content {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 40px;
 }
 
-.dong-section h3, .filter-section h3 {
-    font-size: 16px;
+.sidebar form {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.sidebar h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+    color: #212529;
+}
+
+.sidebar h4 {
+    font-size: 15px;
     font-weight: 600;
     margin-bottom: 12px;
+    color: #495057;
 }
 
-.dong-select {
+.dong-select, .category-select {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 14px;
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 15px;
+    background-color: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 1em;
+    cursor: pointer;
 }
 
-.filter-tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+.category-select:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
-.filter-tab {
-    padding: 10px;
-    border: 1px solid #ddd;
+.filter-btn {
+    padding: 8px 14px;
+    border: 1px solid #ced4da;
     background: #fff;
-    border-radius: 6px;
+    border-radius: 20px;
     font-size: 14px;
+    font-weight: 500;
+    color: #495057;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease-in-out;
 }
 
-.filter-tab.active, .filter-tab:hover {
+.filter-btn:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.filter-btn.active {
     background: #007bff;
     color: white;
     border-color: #007bff;
+    font-weight: 700;
 }
 
 .analysis-btn {
     width: 100%;
-    padding: 15px;
+    padding: 14px;
     font-size: 16px;
     font-weight: 700;
     color: white;
-    background: #007bff;
+    background: linear-gradient(45deg, #007bff, #0056b3);
     border: none;
     border-radius: 8px;
     cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
+    transition: all 0.2s ease-in-out;
 }
 
-/* 오른쪽 지도 */
-.map-container {
+.analysis-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(0, 123, 255, 0.3);
+}
+
+/* --- 오른쪽 메인 콘텐츠 (지도, 워드클라우드 결과 등) --- */
+.content-container { /* map-container -> content-container 로 이름 변경 권장 */
     flex-grow: 1;
     position: relative;
+    padding: 20px; /* 콘텐츠 영역에도 여백 추가 */
+    overflow-y: auto; /* 결과가 길어지면 스크롤 */
 }
 
-#map {
-    width: 100%;
-    height: 100%;
+.result-area {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.map-controls {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    z-index: 999;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.result-area h2 {
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-.control-btn {
-    width: 36px;
-    height: 36px;
-    background: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
-/* --- 모달 공통 스타일 --- */
+/* --- 팝업 모달 --- */
 .popup {
     display: none;
     position: fixed;
@@ -175,20 +227,15 @@ html, body {
     padding: 25px 30px;
     border-radius: 12px;
     width: 90%;
+    max-height: 90vh;
     box-shadow: 0 5px 20px rgba(0,0,0,0.2);
     position: relative;
-   min-height: 900px; /* 모달의 최소 높이 지정 */
-    max-height: 90vh; /* 화면 높이의 90%를 넘지 않도록 설정 */
-        display: flex;
+    display: flex;
     flex-direction: column;
 }
 
-/* [★★★★★ 요청하신 모달 크기 확장 ★★★★★] */
 .popup-content.large {
-    max-width: 900px; /* 유동인구 모달처럼 넓은 모달 */
-}
-.popup-content.medium {
-    max-width: 550px; /* 상권분석 모달처럼 중간 크기 모달 */
+    max-width: 900px;
 }
 
 .popup .close {
@@ -199,148 +246,414 @@ html, body {
     font-weight: bold;
     color: #aaa;
     cursor: pointer;
+    transition: color 0.2s;
 }
+
 .popup .close:hover {
     color: #333;
 }
+
 #analysis-form-modal {
-    flex-grow: 1; /* 남은 공간을 모두 차지하도록 설정 */
-    overflow-y: auto; /* 내용이 넘치면 세로 스크롤바 자동 생성 */
-    padding-right: 15px; /* 스크롤바 공간 확보 */
-    margin-right: -15px; /* 확보된 공간만큼 당겨서 정렬 */
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 15px; /* 스크롤바 공간 */
+    margin-right: -15px;
 }
-/* --- 상권분석 모달 내부 스타일 --- */
+
+/* --- 상권분석 모달 내부 --- */
 .modal-step h2 {
-    font-size: 20px;
-    margin-bottom: 20px;
+    font-size: 22px;
+    margin-bottom: 25px;
     text-align: center;
+    color: #212529;
+    font-weight: 700;
 }
 
 .options {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
 }
+
 .option-btn {
-    padding: 12px;
+    padding: 14px;
     font-size: 16px;
-    border: 1px solid #ddd;
+    border: 1px solid #dee2e6;
     border-radius: 8px;
-    background-color: #f8f8f8;
+    background-color: #fff;
     cursor: pointer;
     transition: all 0.2s;
 }
+
 .option-btn:hover {
-    background-color: #eaf0ff;
+    background-color: #e9ecef;
     border-color: #007bff;
+    color: #007bff;
+    transform: translateY(-2px);
+}
+
+.slider-container {
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.slider {
+    width: 100%;
+}
+
+.slider-container p {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 15px;
     color: #007bff;
 }
 
-/* 슬라이더 스타일 */
-.slider-container { text-align: center; padding: 20px 10px; }
-.slider { width: 100%; }
-.slider-container p { font-size: 24px; font-weight: bold; margin-top: 15px; color: #007bff; }
 .next-btn, .restart-btn {
-    width: 100%; padding: 12px; font-size: 16px; color: white;
-    border: none; border-radius: 6px; cursor: pointer; margin-top: 20px;
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 25px;
+    font-weight: 600;
+    transition: all 0.2s;
 }
-.next-btn { background: #007bff; }
-.restart-btn { background: #6c757d; }
 
-/* 옵션 스크롤 스타일 */
+.next-btn {
+    background: #007bff;
+}
+.next-btn:hover {
+    background: #0056b3;
+}
+.restart-btn {
+    background: #6c757d;
+}
+.restart-btn:hover {
+    background: #5a6268;
+}
+
 .region-options, .type-options {
     max-height: 250px;
     overflow-y: auto;
-    padding-right: 10px;
+    padding: 5px;
 }
 
-/* 최종 결과 화면 스타일 */
-.final-result-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 25px;
-    margin-bottom: 20px;
-}
-.result-section h3 {
-    text-align: center;
-    font-size: 18px;
-    margin-bottom: 15px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
-.analysis-result-box {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 15px;
-}
-.chart-container { display: flex; flex-direction: column; gap: 20px; }
-.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-/* 최종 분석 모달 (step5) 레이아웃 스타일 */
-
-/* 비용 요약 박스 */
+/* --- 상권분석 모달 결과 (Step 5) --- */
 .cost-summary-box {
     width: 100%;
-    border: 1px solid #eee;
-    background-color: #f9f9f9;
+    background-color: #f8f9fa;
     border-radius: 8px;
     padding: 20px;
-    margin-bottom: 25px;
-    text-align: center;
+    margin-bottom: 30px;
 }
+
 .cost-summary-box h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: #333;
+    margin: 0 0 15px 0;
+    color: #212529;
+    text-align: left;
+    font-size: 18px;
+}
+
+#cost-result-box ul {
+    list-style: none;
+    text-align: left;
+}
+#cost-result-box li {
+    font-size: 16px;
+    margin-bottom: 10px;
 }
 #cost-result-box h4 {
-    font-size: 1.1em;
-    margin-bottom: 0;
-}
-#cost-result-box hr {
-    margin: 10px 0;
+    font-size: 18px;
+    margin-top: 15px;
+    text-align: right;
 }
 
-
-/* 차트 표시 영역 */
-.chart-display-area {
-    width: 100%;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 20px;
-}
 .chart-display-area h3 {
-    margin-top: 500;
-    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #212529;
+    margin: 0 0 15px 0;
 }
 
-/* 개별 차트 아이템 (그래프 크기 조절) */
 .chart-item {
-    max-width: 1000px; /* 그래프의 최대 너비 */
-    max-height:1000px; /* 그래프의 최대 높이 */
-
-    padding: 15px; /* ★★★ 이 줄 추가 ★★★ */
-    margin: 0 auto 25px auto; 
-    box-sizing: border-box;
-
+    margin-bottom: 25px;
 }
 .chart-item img {
-    width: 100%; /* 부모 요소(.chart-item)의 너비에 꽉 채움 */
-    height: auto; /* 이미지의 가로세로 비율을 유지 */
-    display: block; /* 이미지 아래 불필요한 여백 제거 */
-}
-/* 그래프들이 모달 내에서 스크롤될 수 있도록 설정 */
-.chart-display-area {
-    max-height: 60vh; /* 모달 높이에 따라 적절히 조절 */
-    overflow-y: auto; /* 내용이 넘칠 경우 스크롤바 생성 */
-    padding: 10px;
-    background-color: #f9f9f9;
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid #dee2e6;
     border-radius: 8px;
-    margin-top: 15px;
 }
-
-/* 각 차트 제목 스타일 */
-.chart-display-area h4 {
+.chart-item h4 {
     text-align: center;
     margin-bottom: 10px;
+    color: #495057;
+    font-size: 15px;
+}
+
+/* --- '전체 맛집 보기' 보조 버튼 스타일 --- */
+.analysis-btn.secondary {
+    background: #6c757d; /* 회색 계열 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.analysis-btn.secondary:hover {
+    background: #5a6268;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* --- 전체 맛집 목록 스타일 --- */
+#all-restaurants-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.restaurant-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+}
+.restaurant-item:hover {
+    transform: scale(1.02);
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.restaurant-item .name {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+}
+.restaurant-item .category {
+    font-size: 14px;
+    color: #6c757d;
+    margin: 4px 0 0 0;
+}
+.restaurant-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 15px;
+    font-weight: 500;
+}
+.restaurant-stats p {
+    margin: 0;
+}
+/* --- Top 5 맛집 목록 스타일 --- */
+#top-restaurant-info {
+    border: 2px solid #007bff;
+    background-color: #f0f7ff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+}
+
+#top-restaurant-info h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0056b3;
+    margin: 0 0 15px 0;
+    text-align: center;
+}
+
+.top-restaurant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.top-restaurant-item {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.top-restaurant-item .rank {
+    font-size: 16px;
+    font-weight: 900;
+    color: #007bff;
+    width: 30px;
+    text-align: center;
+}
+
+.top-restaurant-item .info {
+    margin-left: 15px;
+}
+
+.top-restaurant-item .name {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.top-restaurant-item .category {
+    font-size: 14px;
+    color: #6c757d;
+    margin: 2px 0 0 0;
+}
+/* --- 상세 페이지 스타일 --- */
+.detail-container {
+    max-width: 900px;
+    margin: 80px auto 40px auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.detail-header {
+    padding: 30px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+.category-tag {
+    display: inline-block;
+    background-color: #007bff;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.detail-header h1 {
+    font-size: 28px;
+    margin: 0;
+}
+.detail-header .address {
+    font-size: 16px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.detail-content {
+    padding: 30px;
+}
+.info-section, .blog-section {
+    margin-bottom: 30px;
+}
+.detail-content h3 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+.detail-content ul {
+    list-style: none;
+    padding: 0;
+}
+.info-section li {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.blog-section li a {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    border-radius: 8px;
+    text-decoration: none;
     color: #333;
+    transition: background-color 0.2s;
+}
+.blog-section li a:hover {
+    background-color: #f8f9fa;
+}
+.blog-title {
+    font-weight: 500;
+}
+.blog-date {
+    color: #6c757d;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-left: 20px;
+}
+
+/* --- 목록 링크 스타일 수정 --- */
+a.top-restaurant-item, a.restaurant-item {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* --- 상세 정보 모달 내부 스타일 --- */
+#modal-content-area {
+    width: 100%;
+    overflow-y: auto;
+}
+
+.detail-header {
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+.category-tag {
+    display: inline-block;
+    background-color: #007bff;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.detail-header h1 {
+    font-size: 26px;
+    margin: 0;
+}
+.detail-header .address {
+    font-size: 15px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.detail-content {
+    padding: 20px;
+}
+.info-section, .blog-section {
+    margin-bottom: 25px;
+}
+.detail-content h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+.detail-content ul {
+    list-style: none;
+    padding: 0;
+}
+.info-section li {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.blog-section li a {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: background-color 0.2s;
+}
+.blog-section li a:hover {
+    background-color: #f8f9fa;
+}
+.blog-title {
+    font-weight: 500;
+    margin-right: 20px;
+}
+.blog-date {
+    color: #6c757d;
+    font-size: 14px;
+    flex-shrink: 0;
 }

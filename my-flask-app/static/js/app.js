@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // --- 지도 관련 초기화 코드 전체 삭제 ---
-
-    // --- 1. 상권 분석 모달 기능 ---
+    // --- 1. 상권 분석 모달 기능 (기존과 동일) ---
     const analysisModal = document.getElementById('analysisModal');
     if (analysisModal) {
         const modalOpenBtn = document.getElementById('show-analysis-modal');
@@ -60,7 +58,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 const costResultDiv = document.getElementById('cost-result-box');
                 
-                // 로딩 메시지 표시
                 const chartItems = document.querySelectorAll('.chart-display-area .chart-item');
                 chartItems.forEach(item => {
                     const img = item.querySelector('img');
@@ -103,7 +100,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
+function renderTopRestaurants(restaurants, dongName) {
+    const container = document.getElementById('top-restaurant-info');
+    if (!container) return;
 
+    // restaurants 데이터가 배열이고, 내용이 있는지 확인
+    if (restaurants && Array.isArray(restaurants) && restaurants.length > 0) {
+        // map 함수를 이용해 각 맛집에 대한 HTML 조각을 만듦
+        const restaurantsHTML = restaurants.map((r, index) => `
+            <div class="top-restaurant-item">
+                <span class="rank">${index + 1}</span>
+                <div class="info">
+                    <p class="name">${r.name}</p>
+                    <p class="category">${r.category}</p>
+                </div>
+            </div>
+        `).join(''); // 배열을 하나의 긴 문자열로 합침
+
+        container.innerHTML = `
+            <h4>🏆 '${dongName}' Top 5 맛집</h4>
+            <div class="top-restaurant-list">
+                ${restaurantsHTML}
+            </div>
+        `;
+        container.style.display = 'block';
+    } else {
+        container.innerHTML = '';
+        container.style.display = 'none';
+    }
+}
         function renderCostInfo(costs) {
             const costResultDiv = document.getElementById('cost-result-box');
             if (!costResultDiv) return;
@@ -153,30 +178,104 @@ document.addEventListener('DOMContentLoaded', function () {
         if (restartBtn) {
             restartBtn.addEventListener('click', () => { showStep(1); });
         }
-    } // -- 상권 분석 모달 기능 끝 --
+    }
 
-    // --- 2. MongoDB 기반 트렌드 분석 기능 ---
+    // --- 2. MongoDB 기반 트렌드 분석 기능 (수정됨) ---
     const trendForm = document.getElementById('trend-filter-form');
     const dongButtonsContainer = document.getElementById('dong-buttons-mongo');
     const categorySelect = document.getElementById('category-select-mongo');
     
-    // 워드클라우드 표시 영역 관련 변수
     const initialMessageDiv = document.getElementById('initial-message');
     const resultContentDiv = document.getElementById('result-content');
     const wordcloudTitle = document.getElementById('wordcloud-title');
     const wordcloudImageContainer = document.getElementById('wordcloud-image-container');
 
     let selectedMongoDong = '';
+async function fetchAllRestaurants(dongName) {
+    const titleElem = document.getElementById('all-restaurants-title');
+    const listElem = document.getElementById('all-restaurants-list');
+    
+    // 다른 결과 영역 숨기기
+    document.getElementById('wordcloud-result-area').style.display = 'none';
+    document.getElementById('all-restaurants-area').style.display = 'block';
 
-    // MongoDB 필터 데이터 가져와서 UI 생성
-    async function populateMongoFilters() {
+    titleElem.textContent = `'${dongName}' 전체 맛집 목록 (리뷰 많은 순)`;
+    listElem.innerHTML = '<p>맛집 목록을 불러오는 중...</p>';
+
+    try {
+        const response = await fetch(`/api/restaurants_by_dong?dong_name=${dongName}`);
+        const data = await response.json();
+
+        if (data.success && data.restaurants.length > 0) {
+            listElem.innerHTML = ''; // 로딩 메시지 제거
+            data.restaurants.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'restaurant-item';
+                item.innerHTML = `
+                    <div class="restaurant-info">
+                        <p class="name">${r.name}</p>
+                        <p class="category">${r.category}</p>
+                    </div>
+                    <div class="restaurant-stats">
+                        <p>⭐ ${r.rating || 'N/A'}</p>
+                        <p>📝 ${r.visitor_reviews || 0}</p>
+                    </div>
+                `;
+                listElem.appendChild(item);
+            });
+        } else {
+            listElem.innerHTML = '<p>해당 동의 맛집 정보를 찾을 수 없습니다.</p>';
+        }
+    } catch (error) {
+        console.error("전체 맛집 목록 로딩 실패:", error);
+        listElem.innerHTML = '<p style="color:red;">목록을 불러오는 데 실패했습니다.</p>';
+    }
+}
+    // ★★★ [수정] 동 선택 시 해당 동의 카테고리만 불러오는 함수 ★★★
+    async function updateCategoryList(dongName) {
+        categorySelect.innerHTML = '<option disabled>카테고리 로딩 중...</option>';
+        categorySelect.disabled = true;
+
         try {
+            const response = await fetch(`/api/categories_by_dong?dong_name=${dongName}`);
+            if (!response.ok) throw new Error('서버 응답 오류');
+            
+            const data = await response.json();
+            if (data.success) {
+                categorySelect.innerHTML = ''; // 기존 목록 초기화
+                if (data.categories.length > 0) {
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        categorySelect.appendChild(option);
+                    });
+                    categorySelect.disabled = false; // 카테고리 있으면 활성화
+                } else {
+                    categorySelect.innerHTML = '<option disabled>선택 가능한 카테고리 없음</option>';
+                }
+            } else {
+                throw new Error(data.error || '카테고리 로딩 실패');
+            }
+        } catch (error) {
+            console.error("카테고리 목록 업데이트 실패:", error);
+            categorySelect.innerHTML = `<option disabled>오류: ${error.message}</option>`;
+        }
+    }
+
+    // 초기 필터 데이터(동 목록만) 가져와서 UI 생성
+    async function populateDongFilters() {
+        // ★★★ [수정] 카테고리 선택기를 초기에 비활성화 ★★★
+        categorySelect.innerHTML = '<option value="" disabled selected>동을 먼저 선택하세요</option>';
+        categorySelect.disabled = true;
+
+        try {
+            // 이제 이 API는 동 목록만 가져오는 역할
             const response = await fetch('/api/mongo_filters');
             if (!response.ok) throw new Error('서버 오류');
             const data = await response.json();
 
             if (data.success) {
-                // 동 버튼 생성
                 dongButtonsContainer.innerHTML = '';
                 data.dongs.forEach(dong => {
                     const button = document.createElement('button');
@@ -187,26 +286,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     dongButtonsContainer.appendChild(button);
                 });
 
-                // 업태 옵션 생성
-                categorySelect.innerHTML = '';
-                data.categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
-                    categorySelect.appendChild(option);
-                });
-
                 // 동 버튼에 이벤트 리스너 추가
-                dongButtonsContainer.querySelectorAll('.filter-btn').forEach(button => {
-                    button.addEventListener('click', function() {
-                        dongButtonsContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                        this.classList.add('active');
-                        selectedMongoDong = this.dataset.dongName;
-                    });
-                });
+// app.js의 populateDongFilters 함수 내부를 찾으세요.
+
+dongButtonsContainer.querySelectorAll('.filter-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        dongButtonsContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        selectedMongoDong = this.dataset.dongName;
+
+        // ▼▼▼ 이 부분을 수정하세요 ▼▼▼
+        const showAllBtn = document.getElementById('show-all-restaurants-btn');
+        showAllBtn.style.display = 'block'; // <-- 이 줄을 추가해야 합니다!
+
+        // 기존 리스너 초기화 및 새 리스너 추가
+        showAllBtn.replaceWith(showAllBtn.cloneNode(true)); 
+        document.getElementById('show-all-restaurants-btn').addEventListener('click', () => {
+            fetchAllRestaurants(selectedMongoDong);
+        });
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        updateCategoryList(selectedMongoDong);
+    });
+});
             }
         } catch (error) {
-            console.error("MongoDB 필터 로딩 실패:", error);
+            console.error("동 필터 로딩 실패:", error);
             dongButtonsContainer.innerHTML = '<p style="color:red;">동 목록 로딩 실패</p>';
         }
     }
@@ -215,7 +320,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (trendForm) {
         trendForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-
+                document.getElementById('all-restaurants-area').style.display = 'none';
+        document.getElementById('wordcloud-result-area').style.display = 'block';
+    
             const selectedCategories = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
 
             if (!selectedMongoDong || selectedCategories.length === 0) {
@@ -223,10 +330,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             
-            // 초기 메시지 숨기고 결과 영역 보이기
             initialMessageDiv.style.display = 'none';
             resultContentDiv.style.display = 'block';
-            
             wordcloudTitle.textContent = `'${selectedMongoDong}' 트렌드 분석 중...`;
             wordcloudImageContainer.innerHTML = '<p>워드클라우드를 생성하고 있습니다...</p>';
 
@@ -243,6 +348,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!response.ok) throw new Error((await response.json()).error || '서버 응답 오류');
                 
                 const data = await response.json();
+            renderTopRestaurants(data.top_restaurants, selectedMongoDong);
+
                 const categoryText = selectedCategories.length > 2 ? `${selectedCategories.slice(0, 2).join(', ')} 등` : selectedCategories.join(', ');
                 wordcloudTitle.textContent = `'${selectedMongoDong}'의 '${categoryText}' 트렌드`;
                 if (data.success) {
@@ -250,7 +357,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     wordcloudImageContainer.innerHTML = `<p style="color:grey;">${data.message}</p>`;
                 }
-
             } catch (error) {
                 wordcloudTitle.textContent = `분석 오류`;
                 wordcloudImageContainer.innerHTML = `<p style="color:red;">${error.message}</p>`;
@@ -258,6 +364,5 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 페이지가 처음 로드될 때 MongoDB 필터를 채움
-    populateMongoFilters();
+    populateDongFilters();
 });

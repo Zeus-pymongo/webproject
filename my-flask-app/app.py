@@ -13,6 +13,8 @@ from pymongo import MongoClient
 from konlpy.tag import Okt
 from collections import Counter
 from wordcloud import WordCloud
+from soynlp.noun import LRNounExtractor_v2
+from bson.objectid import ObjectId # 파일 상단에 추가해야 합니다.
 
 load_dotenv()
 app = Flask(__name__)
@@ -20,7 +22,7 @@ app = Flask(__name__)
 # --- 설정 정보 ---
 MARIADB_CONFIG = { 'host': '192.168.0.221', 'port': 3306, 'user': 'jongro', 'password': 'pass123#', 'db': 'jongro', 'charset': 'utf8' }
 MONGO_CONFIG = { 'host': '192.168.0.222', 'port': 27017, 'username': 'kevin', 'password': 'pass123#', 'db_name': 'jongro' }
-CRAWLED_COLLECTION = 'crawled_nave_blogs'
+CRAWLED_COLLECTION = 'crawled_naver_api_blogs'
 RESTAURANTS_COLLECTION = 'RESTAURANTS_GENERAL' # 식당 정보 컬렉션 이름 추가
 FONT_PATH = 'NanumGothic.ttf' # 프로젝트 폴더 내 폰트 경로
 
@@ -202,7 +204,42 @@ def final_analysis():
         import traceback
         traceback.print_exc()
         return jsonify({'error': '최종 분석 중 서버 오류가 발생했습니다.'}), 500
+# app.py 에서 @app.route('/restaurant/<restaurant_id>') 함수를 찾아
+# 아래의 새로운 API 라우트 코드로 전체 교체하세요.
 
+@app.route('/api/restaurant/<restaurant_id>')
+def get_restaurant_api(restaurant_id):
+    """맛집 상세 정보를 JSON 데이터로 반환하는 API"""
+    try:
+        mongodb_conn = get_mongodb_conn()
+        db = mongodb_conn[MONGO_CONFIG['db_name']]
+        
+        # 1. 식당 상세 정보 조회
+        restaurant_collection = db[RESTAURANTS_COLLECTION]
+        obj_id = ObjectId(restaurant_id)
+        restaurant = restaurant_collection.find_one({'_id': obj_id})
+        
+        if not restaurant:
+            return jsonify({'success': False, 'error': '맛집 정보 없음'}), 404
+            
+        restaurant['_id'] = str(restaurant['_id']) # ObjectId를 문자열로 변환
+
+        # 2. 관련 블로그 목록 조회
+        crawled_collection = db[CRAWLED_COLLECTION]
+        blogs = list(crawled_collection.find(
+            {'restaurant_name': restaurant.get('name')},
+            # 블로그 목록에서는 내용 제외하고 필요한 정보만 선택
+            {'blog_url': 1, 'title': 1, 'post_date': 1, '_id': 0}
+        ))
+        
+        return jsonify({'success': True, 'restaurant': restaurant, 'blogs': blogs})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': 'API 처리 중 오류 발생'}), 500
+    
+    
 @app.route('/api/mongo_filters')
 def get_mongo_filters():
     """트렌드 분석(워드클라우드)을 위한 필터 목록을 MongoDB에서 가져옵니다."""
@@ -219,11 +256,10 @@ def get_mongo_filters():
         traceback.print_exc()
         return jsonify({'success': False, 'error': 'MongoDB 필터 목록을 가져오는 중 오류가 발생했습니다.'}), 500
 
-# app.py
+
 
 @app.route('/api/wordcloud', methods=['POST'])
 def get_wordcloud():
-    """★★★ 수정된 워드클라우드 API ★★★"""
     data = request.get_json()
     dong_name = data.get('dong_name')
     categories = data.get('categories')
@@ -235,59 +271,123 @@ def get_wordcloud():
         mongodb_conn = get_mongodb_conn()
         db = mongodb_conn[MONGO_CONFIG['db_name']]
         
-        # 1. 선택된 동, 업태에 해당하는 식당 이름들을 먼저 찾습니다.
-        restaurant_collection = db[RESTAURANTS_COLLECTION]
-        target_restaurants = restaurant_collection.find(
-            {'admin_dong': dong_name, 'category': {'$in': categories}},
-            {'restaurant_name': 1, '_id': 0}
-        )
+        # ▼▼▼ [수정] Top 5 맛집 정보 조회 로직 (find_one -> find) ▼▼▼
+        top_restaurants = [] 
+        try:
+            restaurant_collection = db[RESTAURANTS_COLLECTION]
+            top_docs_cursor = restaurant_collection.find(
+                {'admin_dong': dong_name},
+                sort=[('weighted_score', -1)],
+                projection={'name': 1, 'category': 1}
+            ).limit(5)
+            top_restaurants = list(top_docs_cursor)
+            for r in top_restaurants:
+                r['_id'] = str(r['_id'])
+        except Exception as e:
+            print(f"⚠️ Top 5 맛집 조회 중 오류: {e}")
+        # ▲▲▲ [수정] 로직 끝 ▲▲▲
 
-        # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ [오류 수정] 이 부분을 수정했습니다 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-        # r.get('restaurant_name')을 사용하여 키가 없어도 오류가 나지 않게 하고, 
-        # 값이 있는 경우에만 리스트에 추가합니다.
-        target_restaurant_names = [
-            r.get('restaurant_name') for r in target_restaurants if r.get('restaurant_name')
-        ]
-        # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ [오류 수정] 여기까지 ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-        if not target_restaurant_names:
-            return jsonify({'success': False, 'message': '해당 조건에 맞는 식당 정보가 없습니다.'})
-
-        # 2. 찾은 식당 이름과 일치하는 블로그 포스트의 본문을 가져옵니다.
         blog_collection = db[CRAWLED_COLLECTION]
         posts = blog_collection.find(
-            {'restaurant_name': {'$in': target_restaurant_names}},
+            {'admin_dong': dong_name, 'category': {'$in': categories}},
             {'blog_content': 1}
         )
         all_content = " ".join([post.get('blog_content', '') for post in posts])
         
         if not all_content.strip():
-            return jsonify({'success': False, 'message': '수집된 블로그 리뷰가 없습니다.'})
+            return jsonify({
+                'success': False, 
+                'message': '해당 조건에 대한 블로그 리뷰가 없습니다.',
+                'top_restaurants': top_restaurants # 변수명 수정
+            })
 
-        # 3. KoNLPy로 명사 추출 및 워드클라우드 생성
-        okt = Okt()
-        nouns = okt.nouns(all_content)
+        noun_extractor = LRNounExtractor_v2(verbose=False)
+        noun_extractor.train(all_content.splitlines())
+        nouns = noun_extractor.extract()
         stopwords = {'곳', '것', '등', '수', '이', '그', '저', '때', '해', '맛집', '카페', '방문'}
-        words = [word for word in nouns if word not in stopwords and len(word) > 1]
-        word_counts = Counter(words)
+        word_counts = {noun: score.score for noun, score in nouns.items() if len(noun) > 1 and noun not in stopwords}
 
         if not word_counts:
-            return jsonify({'success': False, 'message': '분석할 키워드가 부족합니다.'})
+            return jsonify({
+                'success': False, 
+                'message': '분석할 키워드가 부족합니다.',
+                'top_restaurants': top_restaurants # 변수명 수정
+            })
 
         wc = WordCloud(font_path=FONT_PATH, background_color='white', width=800, height=600).generate_from_frequencies(word_counts)
-        
-        # 4. 이미지를 Base64로 인코딩하여 반환
         buf = io.BytesIO()
-        wc.to_file(buf, format='png')
+        image = wc.to_image()
+        image.save(buf, format='PNG')
         buf.seek(0)
         image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
         
-        return jsonify({'success': True, 'image': image_base64})
+        return jsonify({
+            'success': True, 
+            'image': image_base64,
+            'top_restaurants': top_restaurants # 변수명 수정
+        })
 
     except Exception as e:
         import traceback
         traceback.print_exc()
         return jsonify({'error': '워드클라우드 생성 중 서버 오류가 발생했습니다.'}), 500
+
+# app.py 에서 get_restaurants_by_dong 함수를 찾아 교체하세요.
+
+@app.route('/api/restaurants_by_dong')
+def get_restaurants_by_dong():
+    """특정 동에 속한 모든 음식점 목록을 리뷰 수 순으로 반환합니다."""
+    dong_name = request.args.get('dong_name')
+    if not dong_name:
+        return jsonify({'success': False, 'error': '동 이름이 필요합니다.'}), 400
+
+    try:
+        mongodb_conn = get_mongodb_conn()
+        db = mongodb_conn[MONGO_CONFIG['db_name']]
+        collection = db[RESTAURANTS_COLLECTION]
+
+        # ▼▼▼ [수정] 프로젝션에서 '_id': 0 제거 ▼▼▼
+        restaurants = list(collection.find(
+            {'admin_dong': dong_name},
+            {'name': 1, 'category': 1, 'rating': 1, 'visitor_reviews': 1}, # '_id': 0 제거
+            sort=[('visitor_reviews', -1)]
+        ))
+        
+        # ▼▼▼ [추가] ObjectId를 문자열로 변환하는 로직 ▼▼▼
+        for r in restaurants:
+            r['_id'] = str(r['_id'])
+        
+        return jsonify({'success': True, 'restaurants': restaurants})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': '맛집 목록 조회 중 오류가 발생했습니다.'}), 500
     
+
+@app.route('/api/categories_by_dong')
+def get_categories_by_dong():
+    """특정 동에 존재하는 카테고리 목록을 반환합니다."""
+    dong_name = request.args.get('dong_name')
+    if not dong_name:
+        return jsonify({'success': False, 'error': '동 이름이 필요합니다.'}), 400
+
+    try:
+        mongodb_conn = get_mongodb_conn()
+        db = mongodb_conn[MONGO_CONFIG['db_name']]
+        collection = db[CRAWLED_COLLECTION]
+
+        # 해당 '동'에 있는 문서들에서 'category' 필드의 고유한 값들을 찾습니다.
+        categories = collection.distinct('category', {'admin_dong': dong_name})
+        
+        return jsonify({'success': True, 'categories': sorted(categories)})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': '카테고리 조회 중 오류가 발생했습니다.'}), 500
+
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
