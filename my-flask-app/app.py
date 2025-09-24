@@ -15,6 +15,8 @@ from collections import Counter
 from wordcloud import WordCloud
 from soynlp.noun import LRNounExtractor_v2
 from bson.objectid import ObjectId # 파일 상단에 추가해야 합니다.
+import traceback
+import matplotlib.font_manager as fm # <-- 이 코드가 있는지 확인
 
 load_dotenv()
 app = Flask(__name__)
@@ -87,7 +89,7 @@ def final_analysis():
         conn = get_mariadb_conn()
         cursor = conn.cursor(pymysql.cursors.DictCursor)
         pyeong = float(pyeong)
-        
+
         # --- 비용 계산 로직 ---
         cursor.execute("SELECT AVG(REN_AMOUNT) as AVG_RENT FROM RENT WHERE REGION_ID = %s AND FLOOR = %s", (region_id, floor))
         rent_per_pyeong_mandanwi = float((cursor.fetchone() or {}).get('AVG_RENT', 0))
@@ -136,7 +138,7 @@ def final_analysis():
             ax.legend(); fig.tight_layout()
 
             buf = io.BytesIO()
-            plt.savefig(buf, format='png', dpi=120) 
+            plt.savefig(buf, format='png', dpi=60) 
             buf.seek(0)
             age_gender_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8')
             plt.close(fig)
@@ -156,7 +158,7 @@ def final_analysis():
             fig.gca().add_artist(centre_circle)
             ax.axis('equal'); ax.set_title('방문 목적별 유동인구 비율', fontsize=16); fig.tight_layout()
             
-            buf = io.BytesIO(); plt.savefig(buf, format='png', dpi=120)
+            buf = io.BytesIO(); plt.savefig(buf, format='png', dpi=60)
             buf.seek(0); mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8'); plt.close(fig)
 
         # --- 3. 시간대별 방문 목적 유동인구 차트 생성 ---
@@ -184,7 +186,7 @@ def final_analysis():
             ax.set_title('시간대별 방문 목적 유동인구', fontsize=16)
             ax.legend(title='이동 목적', bbox_to_anchor=(1.05, 1), loc='upper left'); fig.tight_layout()
             
-            buf = io.BytesIO(); plt.savefig(buf, format='png', dpi=120)
+            buf = io.BytesIO(); plt.savefig(buf, format='png', dpi=60)
             buf.seek(0); 
             time_mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8'); plt.close(fig)
         
@@ -238,7 +240,7 @@ def get_restaurant_api(restaurant_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': 'API 처리 중 오류 발생'}), 500
-    
+ 
     
 @app.route('/api/mongo_filters')
 def get_mongo_filters():
@@ -350,7 +352,7 @@ def get_restaurants_by_dong():
         restaurants = list(collection.find(
             {'admin_dong': dong_name},
             {'name': 1, 'category': 1, 'rating': 1, 'visitor_reviews': 1}, # '_id': 0 제거
-            sort=[('visitor_reviews', -1)]
+            sort=[('weighted_score', -1)]
         ))
         
         # ▼▼▼ [추가] ObjectId를 문자열로 변환하는 로직 ▼▼▼
@@ -387,6 +389,129 @@ def get_categories_by_dong():
         traceback.print_exc()
         return jsonify({'success': False, 'error': '카테고리 조회 중 오류가 발생했습니다.'}), 500
 
+
+
+@app.route('/api/charts/by_dong')
+def get_dong_chart():
+    """동별 식당 수 차트 이미지를 생성하여 반환하는 API"""
+    try:
+        mongodb_conn = get_mongodb_conn()
+        db = mongodb_conn[MONGO_CONFIG['db_name']]
+        collection = db[RESTAURANTS_COLLECTION]
+        
+        pipeline = [
+            {'$group': {'_id': '$admin_dong', 'count': {'$sum': 1}}},
+            {'$sort': {'count': 1}}  # 가로 막대그래프이므로 오름차순으로 정렬
+        ]
+        result = list(collection.aggregate(pipeline))
+        
+        if not result:
+            return jsonify({'success': False, 'error': '데이터가 없습니다.'})
+
+        labels = [item['_id'] for item in result if item['_id']]
+        counts = [item['count'] for item in result if item['_id']]
+
+        plt.rcParams['font.family'] = 'Malgun Gothic'
+        plt.rcParams['axes.unicode_minus'] = False
+        
+        fig, ax = plt.subplots(figsize=(10, len(labels) * 0.4)) # 동 개수에 따라 높이 조절
+        ax.barh(labels, counts, color='skyblue')
+        ax.set_xlabel('식당 수')
+        ax.set_title('동별 식당 수', fontsize=16)
+        fig.tight_layout()
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=120)
+        buf.seek(0)
+        image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+        plt.close(fig)
+
+        return jsonify({'success': True, 'image': image_base64})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': '동별 차트 생성 중 오류 발생'}), 500
+# app.py 파일에 추가할 코드 (기존 업태 분석 API는 삭제)
+
+@app.route('/api/categories/top')
+def get_top_categories():
+    """식당 수가 많은 상위 20개 카테고리(업태) 목록을 반환하는 API"""
+    try:
+        mongodb_conn = get_mongodb_conn()
+        db = mongodb_conn[MONGO_CONFIG['db_name']]
+        collection = db[RESTAURANTS_COLLECTION]
+        
+        pipeline = [
+            {'$group': {'_id': '$category', 'count': {'$sum': 1}}},
+            {'$sort': {'count': -1}},
+            {'$limit': 20}
+        ]
+        result = list(collection.aggregate(pipeline))
+        
+        # 카테고리 이름만 추출하여 리스트로 만듭니다.
+        categories = [item['_id'] for item in result if item['_id']]
+        
+        return jsonify({'success': True, 'categories': categories})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': '상위 카테고리 조회 중 오류 발생'}), 500
+
+@app.route('/api/charts/keywords_by_category')
+def get_keyword_pie_chart_by_category():
+    """선택된 카테고리의 voted_keywords를 집계하여 파이 차트 이미지를 생성하는 API"""
+    category_name = request.args.get('category_name')
+    if not category_name:
+        return jsonify({'success': False, 'error': '카테고리 이름이 필요합니다.'}), 400
+
+    try:
+        mongodb_conn = get_mongodb_conn()
+        db = mongodb_conn[MONGO_CONFIG['db_name']]
+        collection = db[RESTAURANTS_COLLECTION]
+
+        # 해당 카테고리의 모든 식당 문서를 찾습니다.
+        restaurants = list(collection.find({'category': category_name}))
+
+        if not restaurants:
+            return jsonify({'success': False, 'error': '해당 카테고리의 식당 정보가 없습니다.'})
+
+        # 모든 식당의 voted_keywords를 하나로 합산합니다.
+        keyword_counts = {}
+        for r in restaurants:
+            if 'voted_keywords' in r and r['voted_keywords']:
+                for keyword_obj in r['voted_keywords']:
+                    keyword = keyword_obj.get('keyword')
+                    count = keyword_obj.get('count', 0)
+                    if keyword:
+                        keyword_counts[keyword] = keyword_counts.get(keyword, 0) + count
+        
+        if not keyword_counts:
+            return jsonify({'success': False, 'message': '분석할 키워드 데이터가 없습니다.'})
+        
+        # 가장 많이 나온 상위 7개 키워드를 선택합니다. (파이 차트 가독성)
+        sorted_keywords = sorted(keyword_counts.items(), key=lambda item: item[1], reverse=True)
+        top_keywords = sorted_keywords[:7]
+        
+        labels = [item[0] for item in top_keywords]
+        counts = [item[1] for item in top_keywords]
+
+        # Matplotlib으로 파이 차트 생성
+        plt.rcParams['font.family'] = 'Malgun Gothic'
+        plt.rcParams['axes.unicode_minus'] = False
+        
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.pie(counts, labels=labels, autopct='%1.1f%%', startangle=90, textprops={'fontsize': 12})
+        ax.axis('equal')  # 파이를 원형으로 만듭니다.
+        ax.set_title(f"'{category_name}' 업태 주요 리뷰 키워드", fontsize=16, pad=20)
+        
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=120)
+        buf.seek(0)
+        image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+        plt.close(fig)
+
+        return jsonify({'success': True, 'image': image_base64})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': '키워드 파이 차트 생성 중 오류 발생'}), 500
 
 
 if __name__ == '__main__':

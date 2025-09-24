@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const analysisModal = document.getElementById('analysisModal');
     const modalOpenBtn = document.getElementById('show-analysis-modal');
-    const modalCloseBtn = document.getElementById('analysis-modal-close');
+const modalCloseBtn = document.querySelector('#analysisModal .close');
     const modalSteps = document.querySelectorAll('.modal-step');
     const optionBtns = document.querySelectorAll('.option-btn');
     
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
     modalCloseBtn.addEventListener('click', () => {
         analysisModal.style.display = 'none';
     });
-
+modalCloseBtn 
     // 층수 선택 버튼 클릭 이벤트
     optionBtns.forEach(btn => {
         btn.addEventListener('click', function() {

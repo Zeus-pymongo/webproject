@@ -782,3 +782,68 @@ a.top-restaurant-item, a.restaurant-item {
     flex-grow: 1;
     position: relative;
 }
+/* (기존 CSS 생략) ... */
+
+/* ============================================= */
+/* ▼▼▼ 2. 맛집 상세 정보 모달 스타일 추가 ▼▼▼ */
+/* ============================================= */
+#restaurantDetailModal .modal-content {
+    max-width: 600px; /* 모달 너비 조정 */
+    padding: 30px;
+}
+
+#restaurant-detail-content h3 {
+    margin-top: 0;
+    color: #007bff;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+#restaurant-detail-content .detail-grid {
+    display: grid;
+    grid-template-columns: 100px 1fr; /* 레이블과 내용 분리 */
+    gap: 10px 15px;
+    margin-bottom: 25px;
+}
+
+#restaurant-detail-content .detail-grid > div:nth-child(odd) {
+    font-weight: bold;
+    color: #555;
+}
+
+#restaurant-detail-content #detail-blogs-list h4 {
+    margin-top: 25px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+#restaurant-detail-content #detail-blogs-list ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+#restaurant-detail-content #detail-blogs-list li {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+}
+
+#restaurant-detail-content #detail-blogs-list a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+}
+#restaurant-detail-content #detail-blogs-list a:hover {
+    color: #0056b3;
+}
+/* style.css 파일 맨 아래에 추가 */
+
+.category-button-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    padding: 20px;
+}
