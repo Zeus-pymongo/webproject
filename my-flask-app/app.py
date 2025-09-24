@@ -77,6 +77,9 @@ def index():
     
     return render_template('index.html', types=types, regions=regions, floors=floors)
 
+# app.py의 기존 final_analysis 함수를 아래 코드로 전체 교체하세요.
+# app.py의 기존 final_analysis 함수를 아래 코드로 전체 교체하세요.
+
 @app.route('/api/final_analysis', methods=['POST'])
 def final_analysis():
     data = request.get_json()
@@ -89,7 +92,125 @@ def final_analysis():
         conn = get_mariadb_conn()
         cursor = conn.cursor(pymysql.cursors.DictCursor)
         pyeong = float(pyeong)
+        
+        # --- 폰트 설정: NanumGothic.ttf 파일을 직접 사용하도록 통일 ---
+        font_prop_title = fm.FontProperties(fname=FONT_PATH, size=16)
+        font_prop_label = fm.FontProperties(fname=FONT_PATH, size=12)
+        font_prop_ticks = fm.FontProperties(fname=FONT_PATH, size=10)
+        
+        # --- 1. 연령대 및 성별 유동인구 차트 생성 ---
+        cursor.execute("SELECT AGE, GENDER, SUM(MOV_COUNT) as total_moves FROM MOVEMENT WHERE DES_ID = %s GROUP BY AGE, GENDER ORDER BY AGE, GENDER", (region_id,))
+        age_gender_data = cursor.fetchall()
+        age_gender_chart_image = None
+        if age_gender_data and any(row.get('total_moves') is not None for row in age_gender_data):
+            data_map = {}
+            for row in age_gender_data:
+                age, gender = str(row['AGE']), row['GENDER']
+                moves = float(row.get('total_moves') or 0)
+                if age not in data_map: data_map[age] = {'M': 0, 'F': 0}
+                data_map[age][gender] = moves
+            
+            sorted_ages = sorted(data_map.keys(), key=int)
+            labels = [f"{age}대" for age in sorted_ages]
+            male_moves = [data_map[age].get('M', 0) for age in sorted_ages]
+            female_moves = [data_map[age].get('F', 0) for age in sorted_ages]
 
+            x, width = np.arange(len(labels)), 0.35
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.bar(x - width/2, male_moves, width, label='남성', color='#36A2EB')
+            ax.bar(x + width/2, female_moves, width, label='여성', color='#FF6384')
+            
+            ax.set_ylabel('유동인구 수', fontproperties=font_prop_label)
+            ax.set_title('연령대 및 성별 유동인구', fontproperties=font_prop_title)
+            ax.set_xticks(x)
+            ax.set_xticklabels(labels, fontproperties=font_prop_ticks)
+            ax.legend(prop=font_prop_label)
+            
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+            buf.seek(0)
+            age_gender_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8')
+            plt.close(fig)
+
+        # --- 2. 방문 목적별 유동인구 차트 생성 ---
+        cursor.execute("SELECT MOV_TYPE, SUM(MOV_COUNT) as total_moves FROM MOVEMENT WHERE DES_ID = %s GROUP BY MOV_TYPE ORDER BY MOV_TYPE", (region_id,))
+        mov_typ_data = cursor.fetchall()
+        mov_typ_chart_image = None
+        if mov_typ_data and any(row.get('total_moves') is not None for row in mov_typ_data):
+            type_mapping = {'HH':'거주지↔거주지','HW':'거주지→직장','HE':'거주지→기타','WH':'직장→거주지','WW':'직장↔직장','WE':'직장→기타','EH':'기타→거주지','EW':'기타→직장','EE':'기타'}
+            labels = [type_mapping.get(row['MOV_TYPE'], row['MOV_TYPE']) for row in mov_typ_data]
+            sizes = [float(row.get('total_moves') or 0) for row in mov_typ_data]
+
+            fig, ax = plt.subplots(figsize=(10, 7))
+            # ✨ [오류 수정] plt.cm.Pastel1.colors 로 실제 색상 리스트를 전달
+            ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, pctdistance=0.85, colors=plt.cm.Pastel1.colors, textprops={'fontproperties': font_prop_label})
+            ax.axis('equal')
+            ax.set_title('방문 목적별 유동인구 비율', fontproperties=font_prop_title, pad=20)
+            
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+            buf.seek(0)
+            mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8')
+            plt.close(fig)
+
+        # --- 3. 시간대별 방문 목적 유동인구 차트 생성 ---
+# app.py의 final_analysis 함수 내 3번째 차트 생성 부분을 아래 코드로 교체
+
+# --- 3. 시간대별 방문 목적 유동인구 차트 생성 (그룹화 적용) ---
+        cursor.execute("SELECT MOV_TIME, MOV_COUNT, MOV_TYPE FROM MOVEMENT WHERE DES_ID = %s", (region_id,))
+        time_mov_typ_data = cursor.fetchall()
+        time_mov_typ_chart_image = None
+        if time_mov_typ_data and any(row.get('MOV_COUNT') is not None for row in time_mov_typ_data):
+            type_mapping = {'HH':'거주지↔거주지','HW':'거주지→직장','HE':'거주지→기타','WH':'직장→거주지','WW':'직장↔직장','WE':'직장→기타','EH':'기타→거주지','EW':'기타→직장'}
+            all_mov_types = list(type_mapping.keys())
+            
+            # ✨ [수정] 시간대를 4개의 그룹으로 나누어 데이터를 담을 딕셔너리 생성
+            periods = ['새벽', '아침', '점심', '저녁']
+            data_by_period = {period: {typ: 0 for typ in all_mov_types} for period in periods}
+
+            # ✨ [수정] 시간대별 데이터를 그룹에 맞게 합산
+            for row in time_mov_typ_data:
+                hour = int(row['MOV_TIME'])
+                moves = float(row.get('MOV_COUNT') or 0)
+                mov_type = row['MOV_TYPE']
+
+                period = ''
+                if 0 <= hour < 6:
+                    period = '새벽'
+                elif 6 <= hour < 12:
+                    period = '아침'
+                elif 12 <= hour < 18:
+                    period = '점심'
+                elif 18 <= hour < 24:
+                    period = '저녁'
+                
+                if period and mov_type in data_by_period[period]:
+                    data_by_period[period][mov_type] += moves
+
+            # ✨ [수정] 그룹화된 데이터를 차트에 맞게 재구성
+            chart_data = {typ: [data_by_period[period].get(typ, 0) for period in periods] for typ in all_mov_types}
+
+            fig, ax = plt.subplots(figsize=(12, 6))
+            bottoms = np.zeros(len(periods))
+
+            for mov_type in all_mov_types:
+                # x축을 시간대 그룹(periods)으로 하여 막대그래프 생성
+                ax.bar(periods, chart_data[mov_type], label=type_mapping.get(mov_type, mov_type), bottom=bottoms)
+                bottoms += np.array(chart_data[mov_type])
+            
+            ax.set_ylabel('유동인구 수', fontproperties=font_prop_label)
+            ax.set_xlabel('시간대 그룹', fontproperties=font_prop_label)
+            ax.set_title('시간대 그룹별 방문 목적 유동인구', fontproperties=font_prop_title)
+            ax.tick_params(axis='x', labelsize=12) # x축 글자 크기 조정
+            legend = ax.legend(prop=font_prop_label, title='이동 목적', bbox_to_anchor=(1.05, 1), loc='upper left')
+            legend.get_title().set_fontproperties(font_prop_label)
+            
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+            buf.seek(0)
+            time_mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8')
+            plt.close(fig)
+        
         # --- 비용 계산 로직 ---
         cursor.execute("SELECT AVG(REN_AMOUNT) as AVG_RENT FROM RENT WHERE REGION_ID = %s AND FLOOR = %s", (region_id, floor))
         rent_per_pyeong_mandanwi = float((cursor.fetchone() or {}).get('AVG_RENT', 0))
@@ -110,89 +231,9 @@ def final_analysis():
         total_invest_cost = invest_cost_mandanwi * 10000
         total_cost = total_rent_cost + total_purchase_cost + total_invest_cost
         
-        # --- 1. 연령대 및 성별 유동인구 차트 생성 ---
-        cursor.execute("SELECT AGE, GENDER, SUM(MOV_COUNT) as total_moves FROM MOVEMENT WHERE DES_ID = %s GROUP BY AGE, GENDER ORDER BY AGE, GENDER", (region_id,))
-        age_gender_data = cursor.fetchall()
-        age_gender_chart_image = None
-        if age_gender_data:
-            data_map = {}
-            for row in age_gender_data:
-                age, gender, moves = str(row['AGE']), row['GENDER'], row['total_moves']
-                if age not in data_map: data_map[age] = {'M': 0, 'F': 0}
-                data_map[age][gender] = moves
-            
-            sorted_ages = sorted(data_map.keys(), key=int)
-            labels = [f"{age}대" for age in sorted_ages]
-            male_moves = [data_map[age]['M'] for age in sorted_ages]
-            female_moves = [data_map[age]['F'] for age in sorted_ages]
-
-            plt.rcParams['font.family'] = 'Malgun Gothic'
-            plt.rcParams['axes.unicode_minus'] = False
-            x = np.arange(len(labels))
-            width = 0.35
-            fig, ax = plt.subplots(figsize=(12, 8))
-            ax.bar(x - width/2, male_moves, width, label='남성', color='#36A2EB')
-            ax.bar(x + width/2, female_moves, width, label='여성', color='#FF6384')
-            ax.set_ylabel('유동인구 수'); ax.set_title('연령대 및 성별 유동인구', fontsize=16)
-            ax.set_xticks(x); ax.set_xticklabels(labels, fontsize=12)
-            ax.legend(); fig.tight_layout()
-
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png', dpi=60) 
-            buf.seek(0)
-            age_gender_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8')
-            plt.close(fig)
-
-        # --- 2. 방문 목적별 유동인구 차트 생성 ---
-        cursor.execute("SELECT MOV_TYPE, SUM(MOV_COUNT) as total_moves FROM MOVEMENT WHERE DES_ID = %s GROUP BY MOV_TYPE ORDER BY MOV_TYPE", (region_id,))
-        mov_typ_data = cursor.fetchall()
-        mov_typ_chart_image = None
-        if mov_typ_data:
-            type_mapping = {'HH':'거주지↔거주지','HW':'거주지→직장','HE':'거주지→기타','WH':'직장→거주지','WW':'직장↔직장','WE':'직장→기타','EH':'기타→거주지','EW':'기타→직장','EE':'기타↔기타'}
-            labels = [type_mapping.get(row['MOV_TYPE'], row['MOV_TYPE']) for row in mov_typ_data]
-            sizes = [float(row['total_moves']) for row in mov_typ_data]
-
-            fig, ax = plt.subplots(figsize=(12, 8))
-            ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, pctdistance=0.85, colors=plt.cm.Pastel1.colors)
-            centre_circle = plt.Circle((0,0),0.70,fc='white')
-            fig.gca().add_artist(centre_circle)
-            ax.axis('equal'); ax.set_title('방문 목적별 유동인구 비율', fontsize=16); fig.tight_layout()
-            
-            buf = io.BytesIO(); plt.savefig(buf, format='png', dpi=60)
-            buf.seek(0); mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8'); plt.close(fig)
-
-        # --- 3. 시간대별 방문 목적 유동인구 차트 생성 ---
-        cursor.execute("SELECT MOV_TIME, MOV_TYPE, SUM(MOV_COUNT) as total_moves FROM MOVEMENT WHERE DES_ID = %s GROUP BY MOV_TIME, MOV_TYPE ORDER BY MOV_TIME, MOV_TYPE", (region_id,))
-        time_mov_typ_data = cursor.fetchall()
-        time_mov_typ_chart_image = None
-        if time_mov_typ_data:
-            all_mov_types = list(type_mapping.keys())
-            data_by_time = {}
-            for row in time_mov_typ_data:
-                time, mov_type, moves = str(row['MOV_TIME']), row['MOV_TYPE'], float(row['total_moves'])
-                if time not in data_by_time: data_by_time[time] = {typ: 0 for typ in all_mov_types}
-                data_by_time[time][mov_type] = moves
-            
-            sorted_times = sorted(data_by_time.keys(), key=int)
-            chart_data = {typ: [data_by_time[time][typ] for time in sorted_times] for typ in all_mov_types}
-
-            fig, ax = plt.subplots(figsize=(12, 8))
-            bottoms = np.zeros(len(sorted_times))
-            for mov_type in all_mov_types:
-                ax.bar(sorted_times, chart_data[mov_type], label=type_mapping.get(mov_type, mov_type), bottom=bottoms)
-                bottoms += np.array(chart_data[mov_type])
-            
-            ax.set_ylabel('유동인구 수'); ax.set_xlabel('시간대')
-            ax.set_title('시간대별 방문 목적 유동인구', fontsize=16)
-            ax.legend(title='이동 목적', bbox_to_anchor=(1.05, 1), loc='upper left'); fig.tight_layout()
-            
-            buf = io.BytesIO(); plt.savefig(buf, format='png', dpi=60)
-            buf.seek(0); 
-            time_mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8'); plt.close(fig)
-        
         return jsonify({
             'costs': {
-                'rent': { 'total': total_rent_cost, 'pyeong': pyeong, 'per_pyeong': rent_per_pyeong_mandanwi },
+                'rent': { 'total': total_rent_cost, 'pyeong': pyeong, 'per_pyeong': rent_per_pyeong_mandanwi * 10000 },
                 'purchase': total_purchase_cost, 'invest': total_invest_cost, 'total': total_cost
             },
             'movement': {
@@ -203,12 +244,9 @@ def final_analysis():
         })
         
     except Exception as e:
-        import traceback
         traceback.print_exc()
         return jsonify({'error': '최종 분석 중 서버 오류가 발생했습니다.'}), 500
-# app.py 에서 @app.route('/restaurant/<restaurant_id>') 함수를 찾아
-# 아래의 새로운 API 라우트 코드로 전체 교체하세요.
-
+        
 @app.route('/api/restaurant/<restaurant_id>')
 def get_restaurant_api(restaurant_id):
     """맛집 상세 정보를 JSON 데이터로 반환하는 API"""
@@ -443,7 +481,7 @@ def get_top_categories():
         pipeline = [
             {'$group': {'_id': '$category', 'count': {'$sum': 1}}},
             {'$sort': {'count': -1}},
-            {'$limit': 20}
+            {'$limit': 30}
         ]
         result = list(collection.aggregate(pipeline))
         
