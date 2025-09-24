@@ -238,7 +238,7 @@ def get_restaurant_api(restaurant_id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': 'API 처리 중 오류 발생'}), 500
- 
+    
     
 @app.route('/api/mongo_filters')
 def get_mongo_filters():
@@ -350,7 +350,7 @@ def get_restaurants_by_dong():
         restaurants = list(collection.find(
             {'admin_dong': dong_name},
             {'name': 1, 'category': 1, 'rating': 1, 'visitor_reviews': 1}, # '_id': 0 제거
-            sort=[('weighted_score', -1)]
+            sort=[('visitor_reviews', -1)]
         ))
         
         # ▼▼▼ [추가] ObjectId를 문자열로 변환하는 로직 ▼▼▼

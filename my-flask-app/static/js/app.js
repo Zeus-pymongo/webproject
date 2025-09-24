@@ -12,80 +12,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const pyeongNextBtn = analysisModal.querySelector('#pyeong-next-btn');
         const typeBtns = analysisModal.querySelectorAll('.type-btn');
         const restartBtn = analysisModal.querySelector('#restart-analysis-btn');
-            const detailModal = document.getElementById('restaurantDetailModal');
-    const detailContent = document.getElementById('restaurant-detail-content');
-    const detailModalCloseBtn = detailModal.querySelector('.close');
-        let analysisSelections = {};
-detailModalCloseBtn.addEventListener('click', () => {
-        detailModal.style.display = 'none';
-    });
-       const allRestaurantsList = document.getElementById('all-restaurants-list');
-    if(allRestaurantsList) {
-        allRestaurantsList.addEventListener('click', function(event) {
-            const restaurantItem = event.target.closest('.restaurant-item');
-            if (restaurantItem) {
-                const restaurantId = restaurantItem.dataset.id;
-                showRestaurantDetails(restaurantId);
-            }
-        });
-    }
-async function showRestaurantDetails(restaurantId) {
-    const detailModal = document.getElementById('restaurantDetailModal');
-    const detailContent = document.getElementById('restaurant-detail-content');
-    if (!detailModal || !detailContent) return;
-
-    detailModal.style.display = 'flex';
-    detailContent.innerHTML = '<p>상세 정보를 불러오는 중...</p>';
-    
-    // [진단 로그 1] 함수가 올바른 ID로 호출되었는지 확인
-    console.log(`[진단] 맛집 ID: ${restaurantId} 상세 정보 요청 시작`);
-
-    try {
-        const response = await fetch(`/api/restaurant/${restaurantId}`);
-        if (!response.ok) {
-            throw new Error(`서버 응답 오류: ${response.status}`);
-        }
         
-        const data = await response.json();
-        // [진단 로그 2] 서버로부터 받은 실제 데이터 확인
-        console.log("[진단] 서버로부터 받은 데이터:", data);
+        let analysisSelections = {};
 
-        if (data.success) {
-            const { restaurant, blogs } = data;
-
-            const blogsHTML = blogs.length > 0 ? blogs.map(blog => `
-                <li>
-                    <a href="${blog.blog_url}" target="_blank" rel="noopener noreferrer">${blog.title}</a>
-                    <span>(${blog.post_date})</span>
-                </li>
-            `).join('') : '<li>관련 블로그 리뷰가 없습니다.</li>';
-
-            detailContent.innerHTML = `
-                <div class="detail-header">
-                    <h2>${restaurant.name}</h2>
-                    <p class="category">${restaurant.category}</p>
-                    <p class="address">${restaurant.address}</p>
-                </div>
-                <div class="detail-stats">
-                    <p><strong>⭐ 평점:</strong> ${restaurant.rating || 'N/A'}</p>
-                    <p><strong>📝 방문자 리뷰:</strong> ${restaurant.visitor_reviews || 0}개</p>
-                    <p><strong>📝 평균 가격:</strong> ${Math.round(restaurant.avg_price || 0).toLocaleString('ko-KR')}원</p>
-                    <p><strong>📝 평점 요약:</strong> ${restaurant.review_summary || 0}</p>
-                    </div>
-                <div class="detail-blogs">
-                    <h3>관련 블로그 리뷰</h3>
-                    <ul>${blogsHTML}</ul>
-                </div>
-            `;
-        } else {
-            throw new Error(data.error || '알 수 없는 오류');
-        }
-    } catch (error) {
-        // [진단 로그 3] 에러 발생 시 내용 확인
-        console.error("❌ 상세 정보 로딩 실패:", error);
-        detailContent.innerHTML = `<p style="color:red;">상세 정보를 불러오는 데 실패했습니다: ${error.message}</p>`;
-    }
-}
         const showStep = (stepNumber) => {
             modalSteps.forEach(step => { step.style.display = 'none'; });
             const nextStep = analysisModal.querySelector(`#step${stepNumber}`);
@@ -282,8 +211,6 @@ async function fetchAllRestaurants(dongName) {
             data.restaurants.forEach(r => {
                 const item = document.createElement('div');
                 item.className = 'restaurant-item';
-                item.dataset.id = r._id; // ★★★★★ 이 줄을 추가하세요 ★★★★★
-
                 item.innerHTML = `
                     <div class="restaurant-info">
                         <p class="name">${r.name}</p>
@@ -294,9 +221,6 @@ async function fetchAllRestaurants(dongName) {
                         <p>📝 ${r.visitor_reviews || 0}</p>
                     </div>
                 `;
-                                item.addEventListener('click', () => {
-                    showRestaurantDetails(r._id);
-                });
                 listElem.appendChild(item);
             });
         } else {

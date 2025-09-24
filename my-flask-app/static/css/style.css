@@ -144,12 +144,20 @@ html, body {
     flex-wrap: wrap;
     gap: 8px;
 }
-
+/* 동 선택 버튼 그룹 스타일 */
+.dong-buttons {
+    max-height: 200px; /* 너무 길어지면 스크롤바 생성 */
+    overflow-y: auto;
+    padding: 5px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #fff;
+}
 .filter-btn {
     padding: 8px 14px;
     border: 1px solid #ced4da;
     background: #fff;
-    border-radius: 20px;
+    border-radius: 20px; /* 둥근 버튼 */
     font-size: 14px;
     font-weight: 500;
     color: #495057;
@@ -158,7 +166,7 @@ html, body {
 }
 
 .filter-btn:hover {
-    background-color: #e9ecef;
+    background-color: #f1f3f5;
     border-color: #adb5bd;
 }
 
@@ -706,4 +714,71 @@ a.top-restaurant-item, a.restaurant-item {
 .top-keywords li {
     font-size: 15px;
     margin-bottom: 5px;
+}
+/* style.css 파일 맨 아래에 추가 */
+
+.dong-summary {
+    display: flex;
+    gap: 15px;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.summary-item {
+    flex: 1;
+    text-align: center;
+}
+
+.summary-label {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #007bff;
+}
+/* static/css/style.css */
+
+/* --- 헤더 --- */
+.header-actions {
+    display: flex;
+    gap: 12px; /* 버튼 사이 간격 */
+}
+
+.btn-header { /* 모든 헤더 버튼에 적용될 공통 스타일 */
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-header:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* --- 상권분석 모달 (MariaDB) 컨테이너 --- */
+/* ★★★ 지도와 함께 표시될 때를 위한 스타일 추가 ★★★ */
+.mariadb-analysis-container {
+    display: flex;
+    margin-top: 60px;
+    height: calc(100vh - 60px);
+}
+.mariadb-analysis-container .sidebar {
+    /* 기존 사이드바 스타일과 동일하게 사용 가능 */
+}
+.mariadb-analysis-container .map-container {
+    flex-grow: 1;
+    position: relative;
 }
