@@ -23,6 +23,7 @@ from pyecharts.render import make_snapshot
 from snapshot_selenium import snapshot
 from pyecharts import options as opts
 from pyecharts.charts import Pie
+from konlpy.tag import Okt # 상단에 Okt가 import 되어 있는지 확인
 
 load_dotenv()
 app = Flask(__name__)
@@ -173,19 +174,24 @@ def final_analysis():
 
 
 
-# --- 3. 시간대별 방문 목적 유동인구 차트 생성 (그룹화 적용) ---
+# app.py의 final_analysis 함수 내 3번째 차트 생성 부분을 아래 코드로 교체
+
+# --- 3. 시간대별 방문 목적 유동인구 차트 생성 (수정본) ---
         cursor.execute("SELECT MOV_TIME, MOV_COUNT, MOV_TYPE FROM MOVEMENT WHERE DES_ID = %s", (region_id,))
         time_mov_typ_data = cursor.fetchall()
         time_mov_typ_chart_image = None
+
         if time_mov_typ_data and any(row.get('MOV_COUNT') is not None for row in time_mov_typ_data):
-            type_mapping = {'HH':'거주지↔거주지','HW':'거주지→직장','HE':'거주지→기타','WH':'직장→거주지','WW':'직장↔직장','WE':'직장→기타','EH':'기타→거주지','EW':'기타→직장'}
+            type_mapping = {
+                'HH':'거주지↔거주지', 'HW':'거주지→직장', 'HE':'거주지→기타',
+                'WH':'직장→거주지', 'WW':'직장↔직장', 'WE':'직장→기타',
+                'EH':'기타→거주지', 'EW':'기타→직장'
+            }
             all_mov_types = list(type_mapping.keys())
             
-            # ✨ [수정] 시간대를 4개의 그룹으로 나누어 데이터를 담을 딕셔너리 생성
-            periods = ['점심', '저녁','야간']
+            periods = ['점심', '저녁', '야간']
             data_by_period = {period: {typ: 0 for typ in all_mov_types} for period in periods}
 
-            # ✨ [수정] 시간대별 데이터를 그룹에 맞게 합산
             for row in time_mov_typ_data:
                 hour = int(row['MOV_TIME'])
                 moves = float(row.get('MOV_COUNT') or 0)
@@ -208,16 +214,22 @@ def final_analysis():
             bottoms = np.zeros(len(periods))
 
             for mov_type in all_mov_types:
-                # x축을 시간대 그룹(periods)으로 하여 막대그래프 생성
                 ax.bar(periods, chart_data[mov_type], label=type_mapping.get(mov_type, mov_type), bottom=bottoms)
                 bottoms += np.array(chart_data[mov_type])
             
             ax.set_ylabel('유동인구 수', fontproperties=font_prop_label)
             ax.set_xlabel('시간대 그룹', fontproperties=font_prop_label)
-            ax.set_title(f'시간대별 방문 목적 유동인구 {region_id}', fontproperties=font_prop_title)
-            ax.tick_params(axis='x', labelsize=12) # x축 글자 크기 조정
+            ax.set_title(f"'{region_id}' 시간대별 방문 목적 유동인구", fontproperties=font_prop_title) # region_id 대신 region_name 사용
+            
+            # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+            # ★★★ 바로 이 부분이 수정되었습니다 ★★★
+            # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+            ax.set_xticks(range(len(periods))) # x축 눈금 위치 설정
+            ax.set_xticklabels(periods, fontproperties=font_prop_ticks) # 눈금 라벨에 폰트 적용
+            
             legend = ax.legend(prop=font_prop_label, title='이동 목적', bbox_to_anchor=(1.05, 1), loc='upper left')
             legend.get_title().set_fontproperties(font_prop_label)
+            fig.tight_layout()
             
             buf = io.BytesIO()
             plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
@@ -311,6 +323,9 @@ def get_mongo_filters():
         return jsonify({'success': False, 'error': 'MongoDB 필터 목록을 가져오는 중 오류가 발생했습니다.'}), 500
 
 
+# app.py의 @app.route('/api/wordcloud', methods=['POST']) 함수를 이 코드로 교체하세요.
+
+# app.py의 @app.route('/api/wordcloud', methods=['POST']) 함수를 이 코드로 교체하세요.
 
 @app.route('/api/wordcloud', methods=['POST'])
 def get_wordcloud():
@@ -325,22 +340,22 @@ def get_wordcloud():
         mongodb_conn = get_mongodb_conn()
         db = mongodb_conn[MONGO_CONFIG['db_name']]
         
-        # ▼▼▼ [수정] Top 5 맛집 정보 조회 로직 (find_one -> find) ▼▼▼
+        # Top 5 맛집 조회 로직 (기존과 동일)
         top_restaurants = [] 
         try:
             restaurant_collection = db[RESTAURANTS_COLLECTION]
             top_docs_cursor = restaurant_collection.find(
-                {'admin_dong': dong_name},
+                {'admin_dong': dong_name, 'category': {'$in': categories}},
                 sort=[('weighted_score', -1)],
-                projection={'name': 1, 'category': 1}
-            ).limit(5)
+                projection={'name': 1, 'category': 1, '_id': 1}
+            ).limit(10)
             top_restaurants = list(top_docs_cursor)
             for r in top_restaurants:
                 r['_id'] = str(r['_id'])
         except Exception as e:
-            print(f"⚠️ Top 5 맛집 조회 중 오류: {e}")
-        # ▲▲▲ [수정] 로직 끝 ▲▲▲
+            print(f"⚠️ Top 10 맛집 조회 중 오류: {e}")
 
+        # 블로그 데이터 조회
         blog_collection = db[CRAWLED_COLLECTION]
         posts = blog_collection.find(
             {'admin_dong': dong_name, 'category': {'$in': categories}},
@@ -352,41 +367,65 @@ def get_wordcloud():
             return jsonify({
                 'success': False, 
                 'message': '해당 조건에 대한 블로그 리뷰가 없습니다.',
-                'top_restaurants': top_restaurants # 변수명 수정
+                'top_restaurants': top_restaurants
             })
 
-        noun_extractor = LRNounExtractor_v2(verbose=False)
-        noun_extractor.train(all_content.splitlines())
-        nouns = noun_extractor.extract()
-        stopwords = {'곳', '것', '등', '수', '이', '그', '저', '때', '해', '맛집', '카페', '방문'}
-        word_counts = {noun: score.score for noun, score in nouns.items() if len(noun) > 1 and noun not in stopwords}
+        # --- 1. 텍스트 정제 로직 ---
+        patterns_to_remove = [
+            r'소정의 원고료를 지원받아', r'이 포스팅은 쿠팡 파트너스',
+            r'일정액의 수수료를 제공받습니다', r'서로 이웃 추가 환영', '서이추','블로그리뷰',
+            r'내돈내산', r'\n', r'[^\w\s]',
+        ]
+        for pattern in patterns_to_remove:
+            all_content = re.sub(pattern, ' ', all_content)
 
+
+        noun_extractor = LRNounExtractor_v2(verbose=False)
+        noun_extractor.train(all_content.splitlines()) 
+        nouns = noun_extractor.extract() 
+        stopwords = {
+            '곳', '것', '등', '수', '이', '그', '저', '때', '해', '맛집', '카페', '방문',
+            '오늘', '여기', '저기', '거기', '정말', '진짜', '너무', '완전',
+            '입니다', '있습니다', '합니다', '같아요', '같습니다','지상1층','1층','지상2층','2층',
+            '그리고', '그래서', '하지만', '그런데','대리운전','치과의원','우리은행',
+            '후기', '리뷰', '추천', '포스팅', '생각', '느낌', '마음', '주문', '메뉴',
+            '병원','학원','학원청소','청소','사무실청소','들어있어서','이사업체추천',
+            '이사업체후기','이사업체리뷰','곰팡이제거','블로그','제1선거구','제2선거2구','0000','라이센스',
+            dong_name # 동 이름 자체도 불용어에 추가
+        }
+        # 분석 대상 카테고리도 불용어에 추가
+        for cat in categories:
+            stopwords.add(cat)
+
+        # 추출된 명사들 중에서 불용어에 없고, 길이가 1보다 큰 단어들만 사용
+        word_counts = {
+            noun: score.score for noun, score in nouns.items() 
+            if len(noun) > 1 and noun not in stopwords and not noun.isdigit() # noun에 .isdigit()를 적용
+        }
+        
         if not word_counts:
             return jsonify({
                 'success': False, 
                 'message': '분석할 키워드가 부족합니다.',
-                'top_restaurants': top_restaurants # 변수명 수정
+                'top_restaurants': top_restaurants
             })
 
         wc = WordCloud(font_path=FONT_PATH, background_color='white', width=800, height=600).generate_from_frequencies(word_counts)
         buf = io.BytesIO()
-        image = wc.to_image()
-        image.save(buf, format='PNG')
+        wc.to_image().save(buf, format='PNG')
         buf.seek(0)
         image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
         
         return jsonify({
             'success': True, 
             'image': image_base64,
-            'top_restaurants': top_restaurants # 변수명 수정
+            'top_restaurants': top_restaurants
         })
 
     except Exception as e:
         import traceback
         traceback.print_exc()
         return jsonify({'error': '워드클라우드 생성 중 서버 오류가 발생했습니다.'}), 500
-
-# app.py 에서 get_restaurants_by_dong 함수를 찾아 교체하세요.
 
 @app.route('/api/restaurants_by_dong')
 def get_restaurants_by_dong():
@@ -509,7 +548,6 @@ def get_top_categories():
 
 @app.route('/api/charts/keywords_by_category')
 def get_keyword_pie_chart_by_category():
-    """선택된 카테고리의 voted_keywords를 집계하여 Pyecharts로 생성한 파이 차트 이미지를 반환하는 API"""
     category_name = request.args.get('category_name')
     if not category_name:
         return jsonify({'success': False, 'error': '카테고리 이름이 필요합니다.'}), 400
@@ -519,6 +557,7 @@ def get_keyword_pie_chart_by_category():
         db = mongodb_conn[MONGO_CONFIG['db_name']]
         collection = db[RESTAURANTS_COLLECTION]
 
+        # (이전과 동일하게 키워드 빈도수 계산)
         restaurants = list(collection.find({'category': category_name}))
         if not restaurants:
             return jsonify({'success': False, 'error': '해당 카테고리의 식당 정보가 없습니다.'})
@@ -538,44 +577,32 @@ def get_keyword_pie_chart_by_category():
         sorted_keywords = sorted(keyword_counts.items(), key=lambda item: item[1], reverse=True)
         top_keywords = sorted_keywords[:7]
         
-        # --- ★★★ Pyecharts로 차트 생성 ★★★ ---
+        # --- ★★★ Pyecharts 객체 생성 및 설계도(옵션) 추출 ★★★ ---
         pie = (
             Pie()
             .add(
-                series_name="키워드",
-                data_pair=top_keywords, # [(키1, 값1), (키2, 값2)] 형태의 데이터
-                radius=["40%", "75%"], # 도넛 차트 모양 설정
+                series_name="키워드 언급 횟수",
+                data_pair=top_keywords,
+                radius=["40%", "75%"],
+                center=["60%", "50%"], 
+                        
             )
             .set_global_opts(
                 title_opts=opts.TitleOpts(
                     title=f"'{category_name}' 주요 리뷰 키워드",
                     pos_left="center",
-                    title_textstyle_opts=opts.TextStyleOpts(font_size=20),
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=20, font_family="Noto Sans KR"), # 폰트 지정
                 ),
-                legend_opts=opts.LegendOpts(orient="vertical", pos_top="20%", pos_left="5%"),
+                legend_opts=opts.LegendOpts(orient="vertical", pos_top="15%", pos_left="2%", 
+                                           textstyle_opts=opts.TextStyleOpts(font_family="Noto Sans KR")),
             )
-            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c} ({d}%)"))
+            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c} ({d}%)", 
+                                                      font_family="Noto Sans KR", font_size=14))
         )
 
-        # 1. 차트를 임시 HTML 파일로 렌더링
-        temp_html_path = "temp_chart.html"
-        pie.render(temp_html_path)
-
-        # 2. 렌더링된 HTML을 스크린샷으로 찍어 이미지 파일로 저장
-        temp_image_path = "snapshot.png"
-        make_snapshot(snapshot, pie.render(), temp_image_path)
-
-        # 3. 저장된 이미지 파일을 읽어 Base64로 인코딩
-        with open(temp_image_path, "rb") as image_file:
-            image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
-        
-        # 4. 임시 파일들 삭제 (선택 사항)
-        if os.path.exists(temp_html_path):
-            os.remove(temp_html_path)
-        if os.path.exists(temp_image_path):
-            os.remove(temp_image_path)
-
-        return jsonify({'success': True, 'image': image_base64})
+        # 차트 옵션을 JSON(문자열) 형태로 추출하여 전달
+        chart_options = pie.dump_options_with_quotes()
+        return jsonify({'success': True, 'chart_options': chart_options})
 
     except Exception as e:
         traceback.print_exc()
