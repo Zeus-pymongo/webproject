@@ -1,82 +1,169 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>종로구 상권분석 - 상권 분석 플랫폼</title>
-  <meta name="description" content="누구나 쉽고 가장 빠른 최신의 상권 정보, 오픈업에서 확인하세요" />
-  
-  <link rel="icon" href="data:,">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>종로구 상권분석 - 상권 분석 플랫폼</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="{{ url_for('static', filename='js/python_charts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
-  <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId={{ naver_client_id }}"></script>
-  
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
+
 <body>
-  <header class="header">
-    <div class="header-content">
-      <div class="logo"><h1>종로구 상권분석</h1></div>
-      <div class="header-actions"><button class="btn-login">로그인</button></div>
-    </div>
-  </header>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <h1>종로구 상권분석</h1>
+            </div>
 
-  <div class="main-container">
-    <aside class="sidebar">
-      <div class="sidebar-content">
-         <div class="search-section">
-      <h3>주소로 이동</h3>
-      <div style="display: flex; gap: 5px;">
-        <input type="text" id="address-input" placeholder="상세 주소를 입력하세요" class="search-input" />
-        <button id="search-address-btn" class="search-btn"><i class="fas fa-search"></i></button>
-      </div>
-    </div>
-        <div class="search-section">
-          <div class="search-box">
-            <input type="text" placeholder="도로명, 지번, 건물명을 검색하세요" class="search-input" />
-            <button class="search-btn"><i class="fas fa-search"></i></button>
-          </div>
         </div>
+    </header>
 
-        <div class="filter-section">
-          <h3>업태선택</h3>
-          <div class="filter-tabs">
-            <button class="filter-tab active" data-industry="all">한식</button>
-            <button class="filter-tab" data-industry="food">중식</button>
-            <button class="filter-tab" data-industry="food">일식</button>
-            <button class="filter-tab" data-industry="food">양식</button>
-            <button class="filter-tab" data-industry="food">기타외국식</button>
-            <button class="filter-tab" data-industry="food">구내식당업</button>
-            <button class="filter-tab" data-industry="food">출장·이동음식</button>
-            <button class="filter-tab" data-industry="food">제과점</button>
-            <button class="filter-tab" data-industry="food">피자·햄버거·샌드위치</button>
-            <button class="filter-tab" data-industry="food">치킨전문점</button>
-            <button class="filter-tab" data-industry="food">김밥 및 간이음식</button>
-            <button class="filter-tab" data-industry="food">간이음식포장</button>
-            <button class="filter-tab" data-industry="food">주점</button>
-            <button class="filter-tab" data-industry="food">비알콜 음료점</button>
-            <button class="filter-tab" data-industry="food">기타</button>
-          </div>
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="sidebar-content">
+
+                <form id="trend-filter-form">
+                    <h3>📊 트렌드 분석 (블로그 기반)</h3>
+                    <div class="filter-section">
+                        <h4>동 선택</h4>
+                        <div id="dong-buttons-mongo" class="filter-buttons dong-buttons">
+                        </div>
+                    </div>
+                    <div class="filter-section">
+                        <h4>업태 선택 (다중 선택 가능)</h4>
+                        <select id="category-select-mongo" name="categories" class="category-select" multiple size="10">
+                        </select>
+                    </div>
+                    <button type="button" id="show-all-restaurants-btn" class="analysis-btn secondary"
+                        style="display:none; margin-top: 10px;">
+                        해당 동 전체 맛집 보기
+                    </button>
+                    <button type="submit" class="analysis-btn">워드클라우드 분석</button>
+                </form>
+                            <div class="header-actions">
+                <button id="show-analysis-modal" class="btn-header">창업 비용 예상</button>
+
+                <button id="show-dong-chart-btn" class="btn-header">동별 분석</button>
+                <button id="show-category-chart-btn" class="btn-header">업태별 분석</button>
+
+
+            </div>
+            </div>
+        </aside>
+
+        <main class="content-container">
+            <div id="wordcloud-result-area" class="result-area">
+                <div id="initial-message" style="text-align: center; padding: 40px; color: #666;">
+                    <h2>분석 결과를 기다리고 있습니다.</h2>
+                    <p>왼쪽 필터에서 동과 업태를 선택하고 '워드클라우드 분석' 버튼을 눌러주세요.</p>
+                </div>
+                <div id="result-content" style="display:none;">
+                    <div id="top-restaurant-info"></div>
+                    <h2 id="wordcloud-title"></h2>
+                    <div id="wordcloud-image-container"></div>
+                </div>
+            </div>
+
+            <div id="all-restaurants-area" class="result-area" style="display:none;">
+                <h2 id="all-restaurants-title"></h2>
+                <div id="all-restaurants-list"></div>
+            </div>
+        </main>
+    </div>
+
+    <div id="analysisModal" class="popup">
+        <div class="popup-content large">
+            <span class="close">&times;</span>
+            <form id="analysis-form-modal">
+                <div class="modal-step" id="step1">
+                    <h2>1단계: 분석할 지역 선택</h2>
+                    <div class="options region-options">
+                        {% for region in regions %}
+                        <button type="button" class="option-btn region-btn" data-value="{{ region.REGION_ID }}"
+                            data-name="{{ region.REGION_NAME }}">{{ region.REGION_NAME }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-step" id="step2" style="display:none;">
+                    <h2>2단계: 가게 층수 선택</h2>
+                    <div class="options">
+                        {% for floor in floors %}
+                        <button type="button" class="option-btn floor-btn" data-value="{{ floor }}">{{ floor
+                            }}층</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-step" id="step3" style="display:none;">
+                    <h2>3단계: 희망 평수 선택</h2>
+                    <div class="slider-container">
+                        <input type="range" min="5" max="100" value="30" class="slider" id="pyeong-slider">
+                        <p><span id="slider-value">30</span>평</p>
+                    </div>
+                    <button type="button" class="next-btn" id="pyeong-next-btn">다음</button>
+                </div>
+                <div class="modal-step" id="step4" style="display:none;">
+                    <h2>4단계: 창업 업태 선택</h2>
+                    <div class="options type-options">
+                        {% for type_name in types %}
+                        <button type="button" class="option-btn type-btn" data-value="{{ type_name }}">{{ type_name
+                            }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-step" id="step5" style="display:none;">
+                    <h2>📊 최종 상권 분석 결과</h2>
+                    <div class="cost-summary-box">
+                        <h3>💰 예상 창업 비용</h3>
+                        <div id="cost-result-box"></div>
+                    </div>
+                    <h3>👥 유동인구 분석</h3>
+                    <div class="chart-display-area">
+                        <div class="chart-item">
+                            <h4>연령대 및 성별 유동인구</h4>
+                            <img id="ageGenderChartImage" alt="연령대 및 성별 유동인구 그래프">
+                        </div>
+                        <div class="chart-item">
+                            <h4>방문 목적별 유동인구</h4>
+                            <img id="movTypChartImage" alt="방문 목적별 유동인구 그래프">
+                        </div>
+                        <div class="chart-item">
+                            <h4>시간대별 방문 목적 유동인구</h4>
+                            <img id="timeMovTypChartImage" alt="시간대별 방문 목적 유동인구 그래프">
+                        </div>
+                    </div>
+                    <button type="button" id="restart-analysis-btn" class="restart-btn">처음부터 다시하기</button>
+                </div>
+            </form>
         </div>
-      </div>
-    </aside>
+    </div>
 
-    <main class="map-container">
-      <div id="map" class="map"></div>
-      <div class="map-controls">
-        <button class="control-btn" id="geolocate-btn">
-          <i class="fas fa-location-arrow"></i>
-        </button>
-        <button class="control-btn" id="reset-view-btn">
-          <i class="fas fa-home"></i>
-        </button>
-      </div>
-    </main>
-  </div>
-  
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <div id="restaurantDetailModal" class="popup">
+        <div class="popup-content large">
+            <span class="close">&times;</span>
+            <div id="restaurant-detail-content">
+            </div>
+        </div>
+    </div>
+    <div id="chartAnalysisModal" class="popup">
+        <div class="popup-content large">
+            <span class="close">&times;</span>
+            <h2 id="chart-modal-title">분석 차트</h2>
+            <div id="image-container" style="width: 100%; text-align: center;">
+                <img id="analysisChartImage" src="" alt="분석 차트" style="max-width: 100%; height: auto;">
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/python_charts.js') }}"></script>
+    
 </body>
+
 </html>
