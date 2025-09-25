@@ -348,7 +348,7 @@ def get_wordcloud():
                 {'admin_dong': dong_name, 'category': {'$in': categories}},
                 sort=[('weighted_score', -1)],
                 projection={'name': 1, 'category': 1, '_id': 1}
-            ).limit(10)
+            ).limit(5)
             top_restaurants = list(top_docs_cursor)
             for r in top_restaurants:
                 r['_id'] = str(r['_id'])

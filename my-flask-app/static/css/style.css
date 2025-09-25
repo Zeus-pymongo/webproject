@@ -815,11 +815,10 @@ a.top-restaurant-item, a.restaurant-item {
 }
 /* (기존 CSS 생략) ... */
 
-/* ============================================= */
-/* ▼▼▼ 2. 맛집 상세 정보 모달 스타일 추가 ▼▼▼ */
-/* ============================================= */
+
 #restaurantDetailModal .modal-content {
-    max-width: 600px; /* 모달 너비 조정 */
+    max-width: 700px; /* 모달 너비 조정 */
+    
     padding: 30px;
 }
 
@@ -877,4 +876,72 @@ a.top-restaurant-item, a.restaurant-item {
     gap: 10px;
     justify-content: center;
     padding: 20px;
+}/* static/css/style.css 파일 맨 아래에 추가하세요 */
+
+/* --- 맛집 상세 모달: 블로그 리뷰 목록 스타일 --- */
+
+.detail-blogs ul {
+    list-style: none;
+    padding: 0;
+    
+    /* ★★★ 바로 이 값을 수정하면 됩니다 ★★★ */
+    max-height: 450px;  /* 기존: 300px -> 더 길게 */
+
+    overflow-y: auto;   /* 내용이 넘치면 세로 스크롤바 자동 생성 */
+    padding-right: 10px; /* 스크롤바 공간 확보 */
+}
+
+.detail-blogs h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+/* ★★★ 스크롤 기능 추가 ★★★ */
+.detail-blogs ul {
+    list-style: none;
+    padding: 0;
+    max-height: 300px;  /* 목록의 최대 높이를 300px로 제한 */
+    overflow-y: auto;   /* 내용이 넘치면 세로 스크롤바 자동 생성 */
+    padding-right: 10px; /* 스크롤바 공간 확보 */
+}
+
+/* ★★★ 목록 아이템 디자인 개선 ★★★ */
+.detail-blogs li {
+    margin-bottom: 8px;
+}
+
+.detail-blogs li a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #343a40;
+    transition: all 0.2s ease-in-out;
+}
+
+.detail-blogs li a:hover {
+    border-color: #007bff;
+    background-color: #eaf0ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.detail-blogs .blog-title { /* 블로그 제목 */
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 제목이 길면 ...으로 표시 */
+    margin-right: 15px;
+}
+
+.detail-blogs .blog-date { /* 날짜 */
+    font-size: 14px;
+    color: #6c757d;
+    flex-shrink: 0; /* 날짜가 줄어들지 않도록 함 */
 }
