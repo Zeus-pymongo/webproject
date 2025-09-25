@@ -99,7 +99,46 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+// static/js/python_charts.js
 
+// ... (파일의 다른 부분은 그대로 둡니다) ...
+
+// 선택된 업태의 키워드 파이 차트 데이터를 서버에 요청하고 Pyecharts로 그리는 함수
+async function fetchKeywordPieChart(categoryName) {
+    const chartModalTitle = document.getElementById('chart-modal-title');
+    const imageContainer = document.getElementById('image-container');
+    
+    chartModalTitle.textContent = `'${categoryName}' 업태 키워드 분석`;
+    // ★★★ 1. img 태그 대신 차트가 그려질 div로 교체 ★★★
+    imageContainer.innerHTML = `<div id="pyechart" style="width:100%; height:600px;"></div>`;
+    const chartDom = document.getElementById('pyechart');
+    const loadingText = document.createElement('p');
+    loadingText.textContent = `... '${categoryName}' 리뷰를 분석하여 차트를 생성하는 중 ...`;
+    chartDom.appendChild(loadingText);
+
+    try {
+        const response = await fetch(`/api/charts/keywords_by_category?category_name=${encodeURIComponent(categoryName)}`);
+        const result = await response.json();
+
+        if (result.success) {
+            chartDom.innerHTML = ''; // 로딩 메시지 제거
+
+            // ★★★ 2. Pyecharts 차트 렌더링 ★★★
+            // a. ECharts 인스턴스 초기화
+            const myChart = echarts.init(chartDom);
+            // b. 서버에서 받은 '설계도(옵션)'를 JSON으로 파싱하여 적용
+            const chartOptions = JSON.parse(result.chart_options);
+            // c. 차트 그리기
+            myChart.setOption(chartOptions);
+
+        } else {
+            throw new Error(result.message || result.error);
+        }
+    } catch (error) {
+        console.error("키워드 파이 차트 로딩 오류:", error);
+        imageContainer.innerHTML = `<p style="color: red;">${error.message}</p>`;
+    }
+}
     // 선택된 업태의 키워드 파이 차트 이미지를 서버에 요청하고 표시하는 함수
     async function fetchKeywordPieChart(categoryName) {
         chartModalTitle.textContent = `'${categoryName}' 업태 키워드 분석`;

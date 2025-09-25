@@ -402,7 +402,7 @@ dongButtonsContainer.querySelectorAll('.filter-btn').forEach(button => {
             const selectedCategories = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
 
             if (!selectedMongoDong || selectedCategories.length === 0) {
-                alert('동과 하나 이상의 업태를 선택해주세요.');
+                alert('로딩중....');
                 return;
             }
             

@@ -17,6 +17,12 @@ from soynlp.noun import LRNounExtractor_v2
 from bson.objectid import ObjectId # 파일 상단에 추가해야 합니다.
 import traceback
 import matplotlib.font_manager as fm # <-- 이 코드가 있는지 확인
+from pyecharts import options as opts
+from pyecharts.charts import Pie
+from pyecharts.render import make_snapshot
+from snapshot_selenium import snapshot
+from pyecharts import options as opts
+from pyecharts.charts import Pie
 
 load_dotenv()
 app = Flask(__name__)
@@ -133,28 +139,39 @@ def final_analysis():
             plt.close(fig)
 
         # --- 2. 방문 목적별 유동인구 차트 생성 ---
-        cursor.execute("SELECT MOV_TYPE, SUM(MOV_COUNT) as total_moves FROM MOVEMENT WHERE DES_ID = %s GROUP BY MOV_TYPE ORDER BY MOV_TYPE", (region_id,))
-        mov_typ_data = cursor.fetchall()
-        mov_typ_chart_image = None
-        if mov_typ_data and any(row.get('total_moves') is not None for row in mov_typ_data):
-            type_mapping = {'HH':'거주지↔거주지','HW':'거주지→직장','HE':'거주지→기타','WH':'직장→거주지','WW':'직장↔직장','WE':'직장→기타','EH':'기타→거주지','EW':'기타→직장','EE':'기타'}
-            labels = [type_mapping.get(row['MOV_TYPE'], row['MOV_TYPE']) for row in mov_typ_data]
-            sizes = [float(row.get('total_moves') or 0) for row in mov_typ_data]
+            cursor.execute("SELECT MOV_TYPE, SUM(MOV_COUNT) as total_moves FROM MOVEMENT WHERE DES_ID = %s GROUP BY MOV_TYPE ORDER BY MOV_TYPE", (region_id,))
+            mov_typ_data = cursor.fetchall()
+            mov_typ_chart_image = None
 
-            fig, ax = plt.subplots(figsize=(10, 7))
-            # ✨ [오류 수정] plt.cm.Pastel1.colors 로 실제 색상 리스트를 전달
-            ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, pctdistance=0.85, colors=plt.cm.Pastel1.colors, textprops={'fontproperties': font_prop_label})
-            ax.axis('equal')
-            ax.set_title('방문 목적별 유동인구 비율', fontproperties=font_prop_title, pad=20)
-            
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
-            buf.seek(0)
-            mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8')
-            plt.close(fig)
+            if mov_typ_data and any(row.get('total_moves') is not None for row in mov_typ_data):
+                type_mapping = {
+                    'HH':'거주지↔거주지', 'HW':'거주지→직장', 'HE':'거주지→기타',
+                    'WH':'직장→거주지', 'WW':'직장↔직장', 'WE':'직장→기타',
+                    'EH':'기타→거주지', 'EW':'기타→직장'
+                    # 'EE'는 여기서 제외
+                }
 
-        # --- 3. 시간대별 방문 목적 유동인구 차트 생성 ---
-# app.py의 final_analysis 함수 내 3번째 차트 생성 부분을 아래 코드로 교체
+                # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+                # ★★★ 이 필터링 로직을 추가합니다 ★★★
+                # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+                filtered_data = [row for row in mov_typ_data if row['MOV_TYPE'] in type_mapping]
+
+                if filtered_data: # 필터링 후 데이터가 있을 경우에만 차트 생성
+                    labels = [type_mapping.get(row['MOV_TYPE']) for row in filtered_data]
+                    sizes = [float(row.get('total_moves') or 0) for row in filtered_data]
+
+                    fig, ax = plt.subplots(figsize=(10, 7))
+                    ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, pctdistance=0.85, colors=plt.cm.Pastel1.colors, textprops={'fontproperties': font_prop_label})
+                    ax.axis('equal')
+                    ax.set_title('방문 목적별 유동인구 비율', fontproperties=font_prop_title, pad=20)
+                    
+                    buf = io.BytesIO()
+                    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+                    buf.seek(0)
+                    mov_typ_chart_image = base64.b64encode(buf.getvalue()).decode('utf-8')
+                    plt.close(fig)
+
+
 
 # --- 3. 시간대별 방문 목적 유동인구 차트 생성 (그룹화 적용) ---
         cursor.execute("SELECT MOV_TIME, MOV_COUNT, MOV_TYPE FROM MOVEMENT WHERE DES_ID = %s", (region_id,))
@@ -165,7 +182,7 @@ def final_analysis():
             all_mov_types = list(type_mapping.keys())
             
             # ✨ [수정] 시간대를 4개의 그룹으로 나누어 데이터를 담을 딕셔너리 생성
-            periods = ['새벽', '아침', '점심', '저녁']
+            periods = ['점심', '저녁','야간']
             data_by_period = {period: {typ: 0 for typ in all_mov_types} for period in periods}
 
             # ✨ [수정] 시간대별 데이터를 그룹에 맞게 합산
@@ -175,22 +192,19 @@ def final_analysis():
                 mov_type = row['MOV_TYPE']
 
                 period = ''
-                if 0 <= hour < 6:
-                    period = '새벽'
-                elif 6 <= hour < 12:
-                    period = '아침'
-                elif 12 <= hour < 18:
+                if 10 <= hour <= 14:
                     period = '점심'
-                elif 18 <= hour < 24:
+                elif 17 <= hour <= 20:
                     period = '저녁'
+                elif 21 <= hour <= 23:
+                    period = '야간'
                 
                 if period and mov_type in data_by_period[period]:
                     data_by_period[period][mov_type] += moves
 
-            # ✨ [수정] 그룹화된 데이터를 차트에 맞게 재구성
             chart_data = {typ: [data_by_period[period].get(typ, 0) for period in periods] for typ in all_mov_types}
 
-            fig, ax = plt.subplots(figsize=(12, 6))
+            fig, ax = plt.subplots(figsize=(13, 7))
             bottoms = np.zeros(len(periods))
 
             for mov_type in all_mov_types:
@@ -200,7 +214,7 @@ def final_analysis():
             
             ax.set_ylabel('유동인구 수', fontproperties=font_prop_label)
             ax.set_xlabel('시간대 그룹', fontproperties=font_prop_label)
-            ax.set_title('시간대 그룹별 방문 목적 유동인구', fontproperties=font_prop_title)
+            ax.set_title(f'시간대별 방문 목적 유동인구 {region_id}', fontproperties=font_prop_title)
             ax.tick_params(axis='x', labelsize=12) # x축 글자 크기 조정
             legend = ax.legend(prop=font_prop_label, title='이동 목적', bbox_to_anchor=(1.05, 1), loc='upper left')
             legend.get_title().set_fontproperties(font_prop_label)
@@ -495,7 +509,7 @@ def get_top_categories():
 
 @app.route('/api/charts/keywords_by_category')
 def get_keyword_pie_chart_by_category():
-    """선택된 카테고리의 voted_keywords를 집계하여 파이 차트 이미지를 생성하는 API"""
+    """선택된 카테고리의 voted_keywords를 집계하여 Pyecharts로 생성한 파이 차트 이미지를 반환하는 API"""
     category_name = request.args.get('category_name')
     if not category_name:
         return jsonify({'success': False, 'error': '카테고리 이름이 필요합니다.'}), 400
@@ -505,13 +519,10 @@ def get_keyword_pie_chart_by_category():
         db = mongodb_conn[MONGO_CONFIG['db_name']]
         collection = db[RESTAURANTS_COLLECTION]
 
-        # 해당 카테고리의 모든 식당 문서를 찾습니다.
         restaurants = list(collection.find({'category': category_name}))
-
         if not restaurants:
             return jsonify({'success': False, 'error': '해당 카테고리의 식당 정보가 없습니다.'})
 
-        # 모든 식당의 voted_keywords를 하나로 합산합니다.
         keyword_counts = {}
         for r in restaurants:
             if 'voted_keywords' in r and r['voted_keywords']:
@@ -524,29 +535,48 @@ def get_keyword_pie_chart_by_category():
         if not keyword_counts:
             return jsonify({'success': False, 'message': '분석할 키워드 데이터가 없습니다.'})
         
-        # 가장 많이 나온 상위 7개 키워드를 선택합니다. (파이 차트 가독성)
         sorted_keywords = sorted(keyword_counts.items(), key=lambda item: item[1], reverse=True)
         top_keywords = sorted_keywords[:7]
         
-        labels = [item[0] for item in top_keywords]
-        counts = [item[1] for item in top_keywords]
+        # --- ★★★ Pyecharts로 차트 생성 ★★★ ---
+        pie = (
+            Pie()
+            .add(
+                series_name="키워드",
+                data_pair=top_keywords, # [(키1, 값1), (키2, 값2)] 형태의 데이터
+                radius=["40%", "75%"], # 도넛 차트 모양 설정
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=f"'{category_name}' 주요 리뷰 키워드",
+                    pos_left="center",
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=20),
+                ),
+                legend_opts=opts.LegendOpts(orient="vertical", pos_top="20%", pos_left="5%"),
+            )
+            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c} ({d}%)"))
+        )
 
-        # Matplotlib으로 파이 차트 생성
-        plt.rcParams['font.family'] = 'Malgun Gothic'
-        plt.rcParams['axes.unicode_minus'] = False
+        # 1. 차트를 임시 HTML 파일로 렌더링
+        temp_html_path = "temp_chart.html"
+        pie.render(temp_html_path)
+
+        # 2. 렌더링된 HTML을 스크린샷으로 찍어 이미지 파일로 저장
+        temp_image_path = "snapshot.png"
+        make_snapshot(snapshot, pie.render(), temp_image_path)
+
+        # 3. 저장된 이미지 파일을 읽어 Base64로 인코딩
+        with open(temp_image_path, "rb") as image_file:
+            image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
         
-        fig, ax = plt.subplots(figsize=(10, 8))
-        ax.pie(counts, labels=labels, autopct='%1.1f%%', startangle=90, textprops={'fontsize': 12})
-        ax.axis('equal')  # 파이를 원형으로 만듭니다.
-        ax.set_title(f"'{category_name}' 업태 주요 리뷰 키워드", fontsize=16, pad=20)
-        
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=120)
-        buf.seek(0)
-        image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-        plt.close(fig)
+        # 4. 임시 파일들 삭제 (선택 사항)
+        if os.path.exists(temp_html_path):
+            os.remove(temp_html_path)
+        if os.path.exists(temp_image_path):
+            os.remove(temp_image_path)
 
         return jsonify({'success': True, 'image': image_base64})
+
     except Exception as e:
         traceback.print_exc()
         return jsonify({'success': False, 'error': '키워드 파이 차트 생성 중 오류 발생'}), 500

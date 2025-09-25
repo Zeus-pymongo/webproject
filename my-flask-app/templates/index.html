@@ -8,6 +8,8 @@
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://asset.pyecharts.org/assets/v5/echarts.min.js"></script>
+
     <script src="{{ url_for('static', filename='js/python_charts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
@@ -45,34 +47,35 @@
                     </button>
                     <button type="submit" class="analysis-btn">워드클라우드 분석</button>
                 </form>
-                            <div class="header-actions">
-                <button id="show-analysis-modal" class="btn-header">창업 비용 예상</button>
+                <div class="header-actions">
+                    <button id="show-analysis-modal" class="btn-header">창업 비용 예상</button>
 
-                <button id="show-dong-chart-btn" class="btn-header">동별 분석</button>
-                <button id="show-category-chart-btn" class="btn-header">업태별 분석</button>
+                    <button id="show-dong-chart-btn" class="btn-header">동별 분석</button>
+                    <button id="show-category-chart-btn" class="btn-header">업태별 분석</button>
 
-            </div>
-            </div>
-        </aside>
-
-        <main class="content-container">
-            <div id="wordcloud-result-area" class="result-area">
-                <div id="initial-message" style="text-align: center; padding: 40px; color: #666;">
-                    <h2>분석 결과를 기다리고 있습니다.</h2>
-                    <p>왼쪽 필터에서 동과 업태를 선택하고 '워드클라우드 분석' 버튼을 눌러주세요.</p>
-                </div>
-                <div id="result-content" style="display:none;">
-                    <div id="top-restaurant-info"></div>
-                    <h2 id="wordcloud-title"></h2>
-                    <div id="wordcloud-image-container"></div>
                 </div>
             </div>
+    </div>
+    </aside>
 
-            <div id="all-restaurants-area" class="result-area" style="display:none;">
-                <h2 id="all-restaurants-title"></h2>
-                <div id="all-restaurants-list"></div>
+    <main class="content-container">
+        <div id="wordcloud-result-area" class="result-area">
+            <div id="initial-message" style="text-align: center; padding: 40px; color: #666;">
+                <h2>분석 결과를 기다리고 있습니다.</h2>
+                <p>왼쪽 필터에서 동과 업태를 선택하고 '워드클라우드 분석' 버튼을 눌러주세요.</p>
             </div>
-        </main>
+            <div id="result-content" style="display:none;">
+                <div id="top-restaurant-info"></div>
+                <h2 id="wordcloud-title"></h2>
+                <div id="wordcloud-image-container"></div>
+            </div>
+        </div>
+
+        <div id="all-restaurants-area" class="result-area" style="display:none;">
+            <h2 id="all-restaurants-title"></h2>
+            <div id="all-restaurants-list"></div>
+        </div>
+    </main>
     </div>
 
     <div id="analysisModal" class="popup">
@@ -160,7 +163,7 @@
     </div>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/python_charts.js') }}"></script>
-    
+
 </body>
 
 </html>
