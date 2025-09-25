@@ -99,6 +99,9 @@ def final_analysis():
         conn = get_mariadb_conn()
         cursor = conn.cursor(pymysql.cursors.DictCursor)
         pyeong = float(pyeong)
+        cursor.execute("SELECT REGION_NAME FROM REGION WHERE REGION_ID = %s", (region_id,))
+        region_result = cursor.fetchone()
+        region_name = region_result['REGION_NAME'] if region_result else '알 수 없는 지역'
         
         # --- 폰트 설정: NanumGothic.ttf 파일을 직접 사용하도록 통일 ---
         font_prop_title = fm.FontProperties(fname=FONT_PATH, size=16)
@@ -128,7 +131,7 @@ def final_analysis():
             ax.bar(x + width/2, female_moves, width, label='여성', color='#FF6384')
             
             ax.set_ylabel('유동인구 수', fontproperties=font_prop_label)
-            ax.set_title('연령대 및 성별 유동인구', fontproperties=font_prop_title)
+            ax.set_title(f"'{region_name}' 연령대 및 성별 유동인구", fontproperties=font_prop_title)
             ax.set_xticks(x)
             ax.set_xticklabels(labels, fontproperties=font_prop_ticks)
             ax.legend(prop=font_prop_label)
@@ -164,7 +167,7 @@ def final_analysis():
                     fig, ax = plt.subplots(figsize=(10, 7))
                     ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, pctdistance=0.85, colors=plt.cm.Pastel1.colors, textprops={'fontproperties': font_prop_label})
                     ax.axis('equal')
-                    ax.set_title('방문 목적별 유동인구 비율', fontproperties=font_prop_title, pad=20)
+                    ax.set_title(f"'{region_name}' 방문 목적별 유동인구 비율", fontproperties=font_prop_title, pad=20)
                     
                     buf = io.BytesIO()
                     plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
@@ -219,11 +222,9 @@ def final_analysis():
             
             ax.set_ylabel('유동인구 수', fontproperties=font_prop_label)
             ax.set_xlabel('시간대 그룹', fontproperties=font_prop_label)
-            ax.set_title(f"'{region_id}' 시간대별 방문 목적 유동인구", fontproperties=font_prop_title) # region_id 대신 region_name 사용
+            ax.set_title(f"'{region_name}' 시간대별 방문 목적 유동인구", fontproperties=font_prop_title) # region_id 대신 region_name 사용
             
-            # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-            # ★★★ 바로 이 부분이 수정되었습니다 ★★★
-            # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
             ax.set_xticks(range(len(periods))) # x축 눈금 위치 설정
             ax.set_xticklabels(periods, fontproperties=font_prop_ticks) # 눈금 라벨에 폰트 적용
             
@@ -534,7 +535,7 @@ def get_top_categories():
         pipeline = [
             {'$group': {'_id': '$category', 'count': {'$sum': 1}}},
             {'$sort': {'count': -1}},
-            {'$limit': 30}
+            {'$limit': 40}
         ]
         result = list(collection.aggregate(pipeline))
         
@@ -609,5 +610,6 @@ def get_keyword_pie_chart_by_category():
         return jsonify({'success': False, 'error': '키워드 파이 차트 생성 중 오류 발생'}), 500
 
 
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

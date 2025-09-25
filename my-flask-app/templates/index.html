@@ -16,14 +16,13 @@
 </head>
 
 <body>
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">
-                <h1>종로구 상권분석</h1>
-            </div>
+<header class="header">
+    <div class="header-content">
+        <div class="logo"><h1>종로구 상권분석</h1></div>
 
-        </div>
-    </header>
+
+    </div>
+</header>
 
     <div class="main-container">
         <aside class="sidebar">
@@ -43,15 +42,15 @@
                     </div>
                     <button type="button" id="show-all-restaurants-btn" class="analysis-btn secondary"
                         style="display:none; margin-top: 10px;">
-                        해당 동 전체 맛집 보기
+                        동 전체 맛집 보기
                     </button>
-                    <button type="submit" class="analysis-btn">워드클라우드 분석</button>
+                    <button type="submit" class="analysis-btn">워드클라우드 </button>
                 </form>
                             <div class="header-actions">
                 <button id="show-analysis-modal" class="btn-header">창업 비용 예상</button>
 
-                <button id="show-dong-chart-btn" class="btn-header">동별 분석</button>
-                <button id="show-category-chart-btn" class="btn-header">업태별 분석</button>
+                <button id="show-dong-chart-btn" class="btn-header">동별 식당 개수</button>
+                <button id="show-category-chart-btn" class="btn-header">업태별 키워드</button>
 
 
             </div>
@@ -163,7 +162,8 @@
     </div>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/python_charts.js') }}"></script>
-    
+    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+
 </body>
 
 </html>
