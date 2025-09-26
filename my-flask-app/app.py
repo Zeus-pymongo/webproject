@@ -33,7 +33,7 @@ MARIADB_CONFIG = { 'host': '192.168.0.221', 'port': 3306, 'user': 'jongro', 'pas
 MONGO_CONFIG = { 'host': '192.168.0.222', 'port': 27017, 'username': 'kevin', 'password': 'pass123#', 'db_name': 'jongro' }
 CRAWLED_COLLECTION = 'crawled_naver_api_blogs'
 RESTAURANTS_COLLECTION = 'RESTAURANTS_GENERAL' # 식당 정보 컬렉션 이름 추가
-FONT_PATH = 'NanumGothic.ttf' # 프로젝트 폴더 내 폰트 경로
+FONT_PATH = '/usr/share/fonts/NanumGothic.ttf' # 프로젝트 폴더 내 폰트 경로
 
 # --- DB 연결 ---
 def get_mariadb_conn():
@@ -324,9 +324,7 @@ def get_mongo_filters():
         return jsonify({'success': False, 'error': 'MongoDB 필터 목록을 가져오는 중 오류가 발생했습니다.'}), 500
 
 
-# app.py의 @app.route('/api/wordcloud', methods=['POST']) 함수를 이 코드로 교체하세요.
 
-# app.py의 @app.route('/api/wordcloud', methods=['POST']) 함수를 이 코드로 교체하세요.
 
 @app.route('/api/wordcloud', methods=['POST'])
 def get_wordcloud():
@@ -391,8 +389,8 @@ def get_wordcloud():
             '그리고', '그래서', '하지만', '그런데','대리운전','치과의원','우리은행',
             '후기', '리뷰', '추천', '포스팅', '생각', '느낌', '마음', '주문', '메뉴',
             '병원','학원','학원청소','청소','사무실청소','들어있어서','이사업체추천',
-            '이사업체후기','이사업체리뷰','곰팡이제거','블로그','제1선거구','제2선거2구','0000','라이센스',
-            dong_name # 동 이름 자체도 불용어에 추가
+            '이사업체후기','이사업체리뷰','곰팡이제거','블로그','제1선거구','제2선거2구','라이센스',
+            dong_name 
         }
         # 분석 대상 카테고리도 불용어에 추가
         for cat in categories:
@@ -440,7 +438,6 @@ def get_restaurants_by_dong():
         db = mongodb_conn[MONGO_CONFIG['db_name']]
         collection = db[RESTAURANTS_COLLECTION]
 
-        # ▼▼▼ [수정] 프로젝션에서 '_id': 0 제거 ▼▼▼
         restaurants = list(collection.find(
             {'admin_dong': dong_name},
             {'name': 1, 'category': 1, 'rating': 1, 'visitor_reviews': 1}, # '_id': 0 제거
@@ -482,6 +479,7 @@ def get_categories_by_dong():
         return jsonify({'success': False, 'error': '카테고리 조회 중 오류가 발생했습니다.'}), 500
 
 
+# app.py의 @app.route('/api/charts/by_dong') 함수를 이 코드로 교체하세요.
 
 @app.route('/api/charts/by_dong')
 def get_dong_chart():
@@ -503,7 +501,17 @@ def get_dong_chart():
         labels = [item['_id'] for item in result if item['_id']]
         counts = [item['count'] for item in result if item['_id']]
 
-        plt.rcParams['font.family'] = 'Malgun Gothic'
+   
+        font_path = '/usr/share/fonts/NanumGothic.ttf' 
+        
+        # 폰트가 존재하는지 확인 후, Matplotlib에 설정
+        if os.path.exists(font_path):
+            plt.rcParams['font.family'] = fm.FontProperties(fname=font_path).get_name()
+        else:
+            # 윈도우 등 다른 환경을 위한 대체 폰트
+            plt.rcParams['font.family'] = 'Malgun Gothic'
+            print(f"⚠️ 경고: '{font_path}' 경로에 폰트가 없어 'Malgun Gothic'을 사용합니다.")
+            
         plt.rcParams['axes.unicode_minus'] = False
         
         fig, ax = plt.subplots(figsize=(10, len(labels) * 0.4)) # 동 개수에 따라 높이 조절
@@ -612,4 +620,4 @@ def get_keyword_pie_chart_by_category():
 
     
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
