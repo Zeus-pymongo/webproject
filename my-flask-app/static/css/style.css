@@ -66,7 +66,7 @@ html, body {
 
 /* --- 🎨 사이드바 (디자인 개선 버전) --- */
 .sidebar {
-    width: 380px;
+    width: 350px;
     background: #ffffff;
     border-right: 1px solid #dee2e6;
     overflow-y: auto;
@@ -179,9 +179,9 @@ html, body {
 
 .analysis-btn {
     width: 100%;
-    padding: 18px;
-    font-size: 20px;
-    font-weight: 700;
+    padding: 14px;
+    font-size: 17px;
+    font-weight: 600;
     color: white;
     background: linear-gradient(45deg, #007bff, #0056b3);
     border: none;
@@ -189,7 +189,7 @@ html, body {
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
     transition: all 0.2s ease-in-out;
-    margin-top: 10px; /* 버튼 위쪽에 10px의 여백을 추가합니다. */
+    margin-top: 5px; /* 버튼 위쪽에 10px의 여백을 추가합니다. */
 
 }
 /* static/css/style.css */
@@ -199,8 +199,8 @@ html, body {
     display: flex;
     flex-direction: column; /* 버튼을 세로로 쌓음 */
     gap: 12px; /* 버튼 사이의 간격 */
-    margin-bottom: 30px; /* 아래 필터 영역과의 간격 */
-    padding-bottom: 30px; /* 아래 필터 영역과의 간격을 시각적으로 구분 */
+    margin-bottom: 20px; /* 아래 필터 영역과의 간격 */
+    padding-bottom: 20px; /* 아래 필터 영역과의 간격을 시각적으로 구분 */
     border-bottom: 2px solid #e9ecef;
 }
 
@@ -785,14 +785,19 @@ a.top-restaurant-item, a.restaurant-item {
     background: linear-gradient(45deg, #007bff, #0056b3);
     color: white;
     border: none;
-        padding: 15px 20px; /* 내부 여백을 늘려 버튼 크기를 키웁니다. */
-    font-size: 20px;    /* 글자 크기를 키웁니다. */
+    
+    /* --- .analysis-btn과 동일하게 크기 조절 --- */
+    padding: 10px 15px;  /* 상하 10px, 좌우 15px로 여백 조절 */
+    font-size: 15px;     /* 글자 크기 조절 */
+    font-weight: 700;    /* 글자 굵게 */
+    
     border-radius: 8px;
-    font-weight: 600;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
     transition: all 0.2s ease-in-out;
+    white-space: nowrap; /* 버튼 내 글자가 줄바꿈되지 않도록 설정 */
 }
+
 
 .btn-header:hover {
     transform: translateY(-2px);
@@ -815,11 +820,10 @@ a.top-restaurant-item, a.restaurant-item {
 }
 /* (기존 CSS 생략) ... */
 
-/* ============================================= */
-/* ▼▼▼ 2. 맛집 상세 정보 모달 스타일 추가 ▼▼▼ */
-/* ============================================= */
+
 #restaurantDetailModal .modal-content {
-    max-width: 600px; /* 모달 너비 조정 */
+    max-width: 700px; /* 모달 너비 조정 */
+    
     padding: 30px;
 }
 
@@ -877,4 +881,137 @@ a.top-restaurant-item, a.restaurant-item {
     gap: 10px;
     justify-content: center;
     padding: 20px;
+}/* static/css/style.css 파일 맨 아래에 추가하세요 */
+
+/* --- 맛집 상세 모달: 블로그 리뷰 목록 스타일 --- */
+
+.detail-blogs ul {
+    list-style: none;
+    padding: 0;
+    
+    /* ★★★ 바로 이 값을 수정하면 됩니다 ★★★ */
+    max-height: 450px;  /* 기존: 300px -> 더 길게 */
+
+    overflow-y: auto;   /* 내용이 넘치면 세로 스크롤바 자동 생성 */
+    padding-right: 10px; /* 스크롤바 공간 확보 */
+}
+
+.detail-blogs h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+/* ★★★ 스크롤 기능 추가 ★★★ */
+.detail-blogs ul {
+    list-style: none;
+    padding: 0;
+    max-height: 300px;  /* 목록의 최대 높이를 300px로 제한 */
+    overflow-y: auto;   /* 내용이 넘치면 세로 스크롤바 자동 생성 */
+    padding-right: 10px; /* 스크롤바 공간 확보 */
+}
+
+/* ★★★ 목록 아이템 디자인 개선 ★★★ */
+.detail-blogs li {
+    margin-bottom: 8px;
+}
+
+.detail-blogs li a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #343a40;
+    transition: all 0.2s ease-in-out;
+}
+
+.detail-blogs li a:hover {
+    border-color: #007bff;
+    background-color: #eaf0ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.detail-blogs .blog-title { /* 블로그 제목 */
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 제목이 길면 ...으로 표시 */
+    margin-right: 15px;
+}
+
+.detail-blogs .blog-date { /* 날짜 */
+    font-size: 14px;
+    color: #6c757d;
+    flex-shrink: 0; /* 날짜가 줄어들지 않도록 함 */
+}
+
+/* static/css/style.css 파일 맨 아래에 추가 */
+
+/* --- 헤더 검색창 --- */
+.search-container {
+    position: relative; /* 결과창의 기준점이 됨 */
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    color: #adb5bd;
+}
+
+#restaurant-search-input {
+    width: 250px;
+    padding: 8px 15px 8px 40px; /* 아이콘 공간 확보 */
+    border: 1px solid #ced4da;
+    border-radius: 20px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+#restaurant-search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+.search-results {
+    display: none; /* 평소에는 숨김 */
+    position: absolute;
+    top: 110%; /* 검색창 바로 아래 */
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1100;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.search-result-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f3f5;
+}
+.search-result-item:last-child {
+    border-bottom: none;
+}
+.search-result-item:hover {
+    background-color: #f8f9fa;
+}
+.search-result-item p {
+    margin: 0;
+}
+.search-result-item .name {
+    font-weight: 600;
+}
+.search-result-item .category {
+    font-size: 13px;
+    color: #6c757d;
 }

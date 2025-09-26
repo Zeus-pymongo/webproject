@@ -29,6 +29,8 @@ detailModalCloseBtn.addEventListener('click', () => {
             }
         });
     }
+// static/js/app.js의 showRestaurantDetails 함수를 이 코드로 교체하세요.
+
 async function showRestaurantDetails(restaurantId) {
     const detailModal = document.getElementById('restaurantDetailModal');
     const detailContent = document.getElementById('restaurant-detail-content');
@@ -37,32 +39,29 @@ async function showRestaurantDetails(restaurantId) {
     detailModal.style.display = 'flex';
     detailContent.innerHTML = '<p>상세 정보를 불러오는 중...</p>';
     
-    // [진단 로그 1] 함수가 올바른 ID로 호출되었는지 확인
-    console.log(`[진단] 맛집 ID: ${restaurantId} 상세 정보 요청 시작`);
-
     try {
         const response = await fetch(`/api/restaurant/${restaurantId}`);
-        if (!response.ok) {
-            throw new Error(`서버 응답 오류: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`서버 응답 오류: ${response.status}`);
         
         const data = await response.json();
-        // [진단 로그 2] 서버로부터 받은 실제 데이터 확인
-        console.log("[진단] 서버로부터 받은 데이터:", data);
-
         if (data.success) {
             const { restaurant, blogs } = data;
 
+            // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+            // ★★★ 이 부분을 수정하여 span 태그를 추가합니다 ★★★
+            // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
             const blogsHTML = blogs.length > 0 ? blogs.map(blog => `
                 <li>
-                    <a href="${blog.blog_url}" target="_blank" rel="noopener noreferrer">${blog.title}</a>
-                    <span>(${blog.post_date})</span>
+                    <a href="${blog.blog_url}" target="_blank" rel="noopener noreferrer">
+                        <span class="blog-title">${blog.title}</span>
+                        <span class="blog-date">(${blog.post_date})</span>
+                    </a>
                 </li>
             `).join('') : '<li>관련 블로그 리뷰가 없습니다.</li>';
 
+            // (이하 detailContent.innerHTML 부분은 기존과 동일)
             detailContent.innerHTML = `
-                <div class="detail-header">
-                    <h2>${restaurant.name}</h2>
+                <div class="detail-header">                   <h2>${restaurant.name}</h2>
                     <p class="category">${restaurant.category}</p>
                     <p class="address">${restaurant.address}</p>
                 </div>
@@ -72,17 +71,18 @@ async function showRestaurantDetails(restaurantId) {
                     <p><strong>📝 평균 가격:</strong> ${Math.round(restaurant.avg_price || 0).toLocaleString('ko-KR')}원</p>
                     <p><strong>📝 평점 요약:</strong> ${restaurant.review_summary || 0}</p>
                     </div>
+                    
                 <div class="detail-blogs">
+                <div>
                     <h3>관련 블로그 리뷰</h3>
                     <ul>${blogsHTML}</ul>
                 </div>
+                    </div>
             `;
         } else {
             throw new Error(data.error || '알 수 없는 오류');
         }
     } catch (error) {
-        // [진단 로그 3] 에러 발생 시 내용 확인
-        console.error("❌ 상세 정보 로딩 실패:", error);
         detailContent.innerHTML = `<p style="color:red;">상세 정보를 불러오는 데 실패했습니다: ${error.message}</p>`;
     }
 }
